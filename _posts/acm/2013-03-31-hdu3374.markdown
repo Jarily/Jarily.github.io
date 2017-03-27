@@ -1,0 +1,122 @@
+---
+layout: post
+title:  HDU3374(String Problem)字符串-最小表示法+KMP
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[String Problem](http://acm.hdu.edu.cn/showproblem.php?pid=3374)
+
+### 题意    
+求字典序最小的和字典序最大的位置,若有多个则取最左边的;  
+并给出该串在这n个串中出现的次数,即同构串的个数;
+
+### 思想  
+求字典序最小(大)的位置主要用到字符串的最小(大)表示法;  
+求同构串个数可以转换为求该串最小循环节的总个数;  
+涉及到KMP算法中的next函数;
+
+### 代码
+  
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 3374
+#	   @date		 2013/03/31
+============================================================================**/
+#include<iostream>
+#include<string>
+#include<cstring>
+#include<cstdio>
+using namespace std;
+
+const int M=1000010;//模式串的最大长度
+
+char P[M];//模式串
+int next[M];
+int m;//模式串的实际长度
+
+void GetNext()//计算模式串P的next函数
+{
+    int i=0,j=-1;
+    next[0]=-1;
+    while(i<m)
+    {
+        if(j==-1||P[i]==P[j])
+        {
+            i++;
+            j++;
+            next[i]=j;
+        }
+        else
+            j=next[j];
+    }
+}
+
+int GetMin()//用最小表示法求字符串S的最小字典序,返回字典序最小的串的首字母位置
+{
+    int len=m;
+    int i=0,j=1,k=0;
+    while(i<len&&j<len&&k<len)
+    {
+        int t=P[(i+k)%len]-P[(j+k)%len];
+        if(!t)
+            k++;
+        else
+        {
+            if(t>0)
+                i+=k+1;
+            else
+                j+=k+1;
+            if(i==j)
+                j++;
+            k=0;
+        }
+    }
+    return i<j?i:j;
+}
+
+int GetMax() //用最大表示法求字符串S的最小字典序,返回字典序最大的串的首字母位置
+{
+    int len=m;
+    int i=0,j=1,k=0;
+    while(i<len&&j<len&&k<len)
+    {
+        int t=P[(i+k)%len]-P[(j+k)%len];
+        if(!t)
+            k++;
+        else
+        {
+            if(t>0)
+                j+=k+1;
+            else
+                i+=k+1;
+            if(i==j)
+                j++;
+            k=0;
+        }
+    }
+    return i<j?i:j;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(~scanf("%s",P))
+    {
+        m=strlen(P);
+        GetNext();
+        int Min=GetMin();
+        int Max=GetMax();
+        int k=m-next[m];//最小循环节
+        int t=1;
+        if(m%k==0)
+            t=m/k;//m/k为最小循环节的总个数。
+        printf("%d %d %d %d\n",Min+1,t,Max+1,t);
+    }
+    return 0;
+}
+
+```

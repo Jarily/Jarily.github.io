@@ -1,0 +1,241 @@
+---
+layout: post
+title:  最小费用最大流算法
+author: "R. Liao" 
+categories: acm
+tags: 网络流
+---
+
+### 基本概念  
+任何容量网络的最大流流量是唯一且确定的，但是它的最大流f并不是唯一的;  
+既然最大流f不唯一，因此，如果每条弧上不仅有容量限制，还有费用r;  
+即每条弧上有一个单位费用的参数，那么在保证最大流的前提下;  
+还存在一个选择费用最小的最大流问题，即为最小费用最大流问题;
+
+### 算法思想   
+寻找最大流的方法是从某个可行流出发，找到关于这个流的一条增广路P;  
+沿着P调整f，对新的可行流又试图寻找关于它的增广路，循环直至不存在增广路为止;  
+要求最小费用最大流：  
+如果f是流量为f1的可行流中费用最小者，而p是关于f的所有增广路中费用最小的增广路;  
+那么沿着p去调整f，得到可行流_f，就是流量为f1的所有可行流中的费用最小者;  
+这样当f是最大流时，它也就是所要求的最小费用最大流了;
+
+### 算法内容：  
+在寻找关于f的最小费用增广路的过程中;  
+需要构造一个关于f的伴随网络W(f);  
+把在原网络中寻找关于f的最小费用增广路转换为在伴随网络W(f)中寻找从Vs到Vt的最短路问题;
+  
+其中伴随网络W(f)构造为：  
+顶点为原网络中的顶点;  
+原网络中的每条弧<u,v>变成两个方向相反的弧<u,v>和<v,u>;  
+在W(f)中每条弧<u,v>的权值为：  
+
+```
+if(f(u,v)<c(u,v))
+    W(u,v)=r(u,v);
+else if(f(u,v)==c(u,v))
+    W(u,v)=无穷大(可省略);
+if(f(u,v)>0)
+    W(v,u)=-r(u,v);
+else if(f(u,v)==0)
+    W(v,u)=无穷大(可省略);
+```
+
+* 算法流程  
+①开始取f(0)={0};  
+②一般若在第k-1步得到的最小费用流为f(k-1),则构造伴随网络W(f(k-1));  
+③在W(f(k-1))中寻找从Vs到Vt的最短路，若不存在则转⑤，存在转④;  
+④在原网络G中得到相应的增广路P，在P上对f(k-1)进行调整;调整后新的可行流为f(k)，转②;  
+⑤f(k-1)为最小费用最大流，算法完毕;
+
+### 举例应用 HDU1533/ZJU2404/PKU2195
+
+#### 链接
+[Going Home](http://acm.hdu.edu.cn/showproblem.php?pid=1533)
+
+#### 题意    
+在一个网络地图上，有n个小人和n栋房子;
+在每个单位时间内，每个人可以往水平方向或垂直方向移动一步，走到相邻的方格中;
+对于每个小人，走一步需支付一美元，直到他走入房子里，且每栋房子只能容纳一个人;
+求让n个小人移动到n个不同的房子，求需要支付的最小费用;  
+
+#### 代码
+```
+/**============================================================================
+#	   @author	     Jarily
+#	   @name		 HDOJ 1533
+#	   @date		 2013/02/26
+============================================================================**/
+#include<iostream>
+#include<cstring>
+#include<cstdlib>
+#include<cstdio>
+#include<climits>
+#include<algorithm>
+#include<queue>
+using namespace std;
+
+int n,m;
+const int N=250;
+const int M=10000;
+const int MAX=0xffffff;
+char coord[N][N];//坐标集
+int pre[M];//存储前驱顶点
+int dist[M];//存储到源点s的距离
+
+int inq[M];//每个顶点是否在队列中的标志
+int min_c_f;//记录增广路径中的残留容量
+int vertex;//顶点数
+int sum;//保存最小费用
+
+struct element
+{
+    int c;//容量
+    int f;//流
+    int c_f;//残留容量
+    int v;//价值
+} G[N][N];
+
+struct man//记录小矮人的坐标
+{
+    int x,y;
+} man[N];
+struct house//记录房子的坐标
+{
+    int x,y;
+} house[N];
+
+void init()
+{
+    sum=0;
+    int mcase,hcase;//记录有多少个小矮人和房子
+    mcase=hcase=0;
+    for(int i=1; i<=m; i++)
+    {
+        for(int j=1; j<=n; j++)
+        {
+            cin>>coord[i][j];
+            if(coord[i][j]=='m')//记录小矮人的坐标
+            {
+                mcase++;
+                man[mcase].x=i;
+                man[mcase].y=j;
+            }
+            if(coord[i][j]=='H')//记录房子的坐标
+            {
+                hcase++;
+                house[hcase].x=i;
+                house[hcase].y=j;
+            }
+        }
+    }
+
+    vertex=mcase+hcase+1;//加入超源点0和超汇点，注意要+1，即抽象成网络流的结构
+    for(int u=0; u<=vertex; u++)//初始流为0，所以不用重构W(f);
+    {
+        for(int v=0; v<=vertex; v++)
+        {
+            G[u][v].c=G[v][u].c=0;
+            G[u][v].c_f=G[v][u].c_f=0;
+            G[u][v].f=G[v][u].f=0;
+            G[u][v].v=G[v][u].v=MAX;
+        }
+    }
+
+    for(int i=1; i<=mcase; i++)
+    {
+        G[0][i].v=0;//从超源点到各个小矮人之间的权值取为0
+        G[0][i].c=G[0][i].c_f=1;//从超源点到各个小矮人之间的容量取为1
+        for(int j=1; j<=hcase; j++)
+        {
+            int w=abs(house[j].x-man[i].x)+abs(house[j].y-man[i].y);//计算小矮人到每一个房子之间的距离
+            G[i][mcase+j].v=w;//将距离赋给对应的权值，注意第二个下标，即表示房子的下标为mcase+j~！！
+            G[i][mcase+j].c=1;//容量取为1
+            G[i][mcase+j].c_f=G[i][mcase+j].c;
+            G[mcase+j][vertex].v=0;//将从各个房子到超汇点之间的权值取为0，注意房子的下标为mcase+j
+            G[mcase+j][vertex].c=G[mcase+j][vertex].c_f=1;//将从各个房子到超汇点之间的容量取为0，注意房子的下标为mcase+j
+        }
+    }
+}
+
+void SPFA(int s)//求最短路径的SPFA算法
+{
+    queue<int> Q;
+    int u;
+    for(int i=0; i<=vertex; i++)//初始化
+    {
+        dist[i]=MAX;
+        pre[i]=-1;
+        inq[i]=0;
+    }
+    dist[s]=0;
+    Q.push(s);
+    inq[s] = 1;
+    while(!Q.empty())
+    {
+        u=Q.front();
+        Q.pop();
+        inq[u]=0;
+        for(int i=0; i<=vertex; i++)//更新u的邻接点的dist[], pre[], inq[]
+        {
+            int v=i;
+            if(G[u][v].c_f==0)     // 表示(u,v)没有边
+                continue;
+            if(G[u][v].v==MAX)
+                G[u][v].v=-G[v][u].v;
+            if(dist[v]>dist[u]+G[u][v].v)//松弛操作
+            {
+                dist[v]=dist[u]+G[u][v].v;
+                pre[v]=u;
+                if(inq[v]==0)
+                {
+                    Q.push(v);
+                    inq[v]=1;
+                }
+            }
+        }
+    }
+}
+
+void ford_fulkerson(int s,int t)
+{
+    SPFA(s);
+    while(pre[t]!=-1)//pre为-1表示没有找到从s到t的增广路径
+    {
+        //cout<<dist[t]<<"^_^"<<endl;
+        sum+=dist[t];//将这一条最短路径的值加进sum
+        min_c_f=MAX;
+        int u=pre[t], v=t;//计算增广路径上的残留容量
+        while(u!=-1)
+        {
+            if(min_c_f > G[u][v].c_f)
+                min_c_f=G[u][v].c_f;
+            v=u;
+            u=pre[v];
+        }
+        u=pre[t], v=t;
+        while(u!=-1)
+        {
+            G[u][v].f+=min_c_f; //修改流
+            G[v][u].f=-G[u][v].f;
+            G[u][v].c_f=G[u][v].c-G[u][v].f; //修改残留容量
+            G[v][u].c_f=G[v][u].c-G[v][u].f;
+            v=u;
+            u=pre[v];
+        }
+        SPFA(s);
+    }
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(cin>>m>>n,m||n)
+    {
+        init();
+        ford_fulkerson(0,vertex);//计算从超源点0到超汇点vertex之间的最小费用最大流
+        cout<<sum<<endl;
+    }
+    return 0;
+}
+```

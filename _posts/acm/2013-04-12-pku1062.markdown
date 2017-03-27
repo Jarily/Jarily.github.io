@@ -1,0 +1,122 @@
+---
+layout: post
+title:  PKU1062(昂贵的聘礼)单源点最短路径-Dijkstra算法
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[昂贵的聘礼](http://poj.org/problem?id=1062)
+
+### 题意         
+看着比英文还蛋疼的中文题;  
+每个物品看成一个节点,酋长的允诺也看作一个物品,且始终为第一个结点;  
+如果一个物品加上金币可以交换另一个物品,则这两个节点之间有边,权值为金币数,求所有节点中到第一个节点的最短路;
+
+### 分析      
+KMP算法,在发生失配时,文本串不需要回溯;    
+最短路问题,不过因为存在着等级的差异所以需要枚举;  
+即对冒险者的等级进行枚举,也就是说冒险者只能和在他等级以上的人进行交易;  
+这样枚举的好处是能够把所有的情况都考虑进去;  
+需要注意的是酋长的等级不一定是最高的;
+
+### 代码    
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 1062
+#	   @date		 2013/04/12
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<queue>
+#include<algorithm>
+using namespace std;
+
+const int N=105;
+const int INF=0xffffff;
+
+int G[N][N],dist[N];
+int rank[N];//每个结点的等级
+bool visit[N];//标记结点
+int m,n;//m为等级差，n为物品数目
+
+int Dijkstra()
+{
+    for(int i=1; i<=n; i++) //dist[i]的初始化
+        dist[i]=G[0][i];//最初的源点0到任意点i的最初距离(权值),相当于每个物品的原价
+    for(int i=1; i<=n; i++)
+    {
+        int min=INF,k=0;
+        for(int j=1; j<=N; j++)
+        {
+            if(visit[j]&&dist[j]<min)
+            {
+                min=dist[j];
+                k=j;
+            }
+        }
+        if(k==0)
+            break;
+        visit[k]=false;
+        for(int j=1; j<=n; j++)
+        {
+            if(visit[j]&&G[k][j]!=INF&&dist[j]>G[k][j]+dist[k])
+                dist[j]=G[k][j]+dist[k];
+        }
+    }
+    return dist[1];
+}
+
+int main ()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(~scanf("%d%d",&m,&n))
+    {
+        for(int i=0; i<=n; i++)
+            for(int j=0; j<=n; j++)
+            {
+                visit[i]=true;
+                G[i][j]=INF;
+                dist[i]=INF;
+            }
+
+        for(int i=1; i<=n; i++)
+        {
+        	int p,l,x;//依次表示该物品的价格、主人的地位等级和替代品总数。
+            scanf("%d%d%d",&p,&l,&x);
+            G[0][i]=p;//此时为原价
+            rank[i]=l;
+            for(int j=1; j<=x; j++)
+            {
+            	int t,v;//分别表示替代品的编号和"优惠价格"
+                scanf("%d%d",&t,&v);
+                G[t][i]=v;//物品i在有第t号替代品情况下的优惠价G[t][i],当t=0时说明i无替代品
+            }
+        }
+
+        int ans=INF;
+        for(int i=1; i<=n; i++) //枚举n个起点
+        {
+            for(int j=1; j<=n; j++) //visit标记;
+            {
+            	//当其它物品j的等级小于当前物品且两者等级差不超过m
+                if(rank[j]<=rank[i]&&rank[j]+m<=rank[i])
+                    visit[j]=true;
+                else
+                    visit[j]=false;
+            }
+            int tmp=Dijkstra();
+            if(ans>tmp)
+                ans=tmp;
+        }
+        printf("%d\n",ans);
+    }
+    return 0;
+}
+
+```

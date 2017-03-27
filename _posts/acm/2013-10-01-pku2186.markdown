@@ -1,0 +1,156 @@
+---
+layout: post
+title:  PKU2186(Popular Cows)+强连通分支Tarjan算法+缩点
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Popular Cows](http://poj.org/problem?id=2186)
+
+### 题意           
+有N(N<=10000)头牛,每头牛都想成为most poluler的牛;  
+给出M(M<=50000)个关系,如(1,2)代表1欢迎2,关系可以传递,但是不可以相互,即1欢迎2不代表2欢迎1;  
+但是如果2也欢迎3那么1也欢迎3;  
+给出N,M和M个欢迎关系,求被所有牛都欢迎的牛的数量;
+
+### 分析            
+求有向图的强连通分量+拓扑排序;  
+利用Tarjan算法求有向图的强连通分量;  
+Tarjan算法是基于DFS算法,每个强连通分量为搜索树中的一棵子树;  
+搜索时,把当前搜索树中的未处理的结点加入一个栈,回溯时可以判断栈顶到栈中的节点是否为一个强连通分量;  
+当dfn[u]==low[u]时,以u为根的搜索子树上所有结点是一个强连通分量;  
+dfn数组表示深度优先数(访问次序),low[u]表示从u或者u的子孙出发通过回边可以到达的最低深度优先数;  
+low[u]=min{dfn[u],min{low[w]|w是u的一个子女},min{dfn[v]|v与u邻接,且(u,v)是一条回边}};
+
+### 代码
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 2186
+#	   @date		 2013/10/01
+============================================================================**/
+#include<iostream>
+#include<cstring>
+#include<algorithm>
+#include<cstdio>
+using namespace std;
+
+const int M=10010;
+
+struct Edge
+{
+    int v,to;
+} edge[5*M];
+
+int head[M];
+int edgeNum;
+int cnt,scnt,begin,n,m;
+int low[M],dfn[M],stack[M],id[M],out[M];
+int ans[M];
+
+void add(int a,int b)
+{
+    edge[edgeNum].v=b;
+    edge[edgeNum].to=head[a];
+    head[a]=edgeNum++;
+}
+
+void dfs(int x)
+{
+    low[x]=dfn[x]=++cnt;
+    stack[++begin]=x;
+    int v;
+    for(int i=head[x]; i!=-1; i=edge[i].to)
+    {
+        v=edge[i].v;
+        if(!dfn[v])
+        {
+            dfs(v);
+            low[x]=min(low[v],low[x]);
+        }
+        else if(!id[v])
+        {
+            low[x]=min(dfn[v],low[x]);
+        }
+    }
+    if(low[x]==dfn[x])
+    {
+        scnt++;
+        int tmp=0;
+        do
+        {
+            tmp++;
+            v=stack[begin--];
+            id[v]=scnt;
+        }
+        while(v!=x);
+        ans[scnt]=tmp;
+    }
+    return ;
+}
+
+void Tarjan()
+{
+    cnt=scnt=begin=0;
+    memset(dfn,0,sizeof(dfn));
+    for(int i=1; i<=n; i++)
+    {
+        if(!dfn[i])
+            dfs(i);
+    }
+    return;
+}
+
+int main()
+{
+	//freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int t,a,b;
+    while(~scanf("%d%d",&n,&m))
+    {
+
+        edgeNum=0;
+        memset(id,0,sizeof(id));
+        memset(head,-1,sizeof(head));
+        for(int i=0; i<m; i++)
+        {
+            scanf("%d%d",&a,&b);
+            add(a,b);
+        }
+        Tarjan();
+        if(scnt==1)
+        {
+            printf("%d\n",n);
+            continue;
+        }
+        memset(out,0,sizeof(out));
+        for(int i=1; i<=n; i++)
+            for(int j=head[i]; j!=-1; j=edge[j].to)
+            {
+                int v=edge[j].v;
+                if(id[i]!=id[v])
+                {
+                    out[id[i]]++;
+                }
+            }
+        int res=0;
+        for(int i=1; i<=scnt; i++)
+        {
+            if(!out[i])
+            {
+                if(!res)
+                    res=ans[i];
+                else
+                {
+                    res=0;
+                    break;
+                }
+            }
+        }
+        printf("%d\n",res);
+    }
+}
+
+```

@@ -1,0 +1,152 @@
+---
+layout: post
+title:   PKU3463(Sightseeing)-最短路和次短路问题,dijkstra算法
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Sightseeing](http://poj.org/problem?id=3463)
+
+### 题意           
+在一个有向图中,求从s到t两个点之间的最短路和比最短路长1的次短路的条数之和;
+
+### 分析        
+用A*求第K短路,目测会超时,直接在dijkstra算法上求次短路;  
+将dist数组开成二维的,即dist[v][2],第二维分别用于记录最短路和次短路;  
+再用一个cnt二维数组分别记录最短路和次短路的条数;  
+每次更新路径的条数时,不能直接加1,,应该加上cnt[u][k],k为次短路径或者最短路径的标记;  
+图有重边,不能用邻接矩阵存储;  
+不知道为什么,题目上说的是N and M, separated by a single space, with 2≤N≤1000 and 1 ≤ M ≤ 10000;  
+而我的代码硬是把N开成1W了才过,求解释,RE了无数次,擦;
+
+### 代码
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 3463
+#	   @date		 2013/09/26
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<string>
+#include<algorithm>
+using namespace std;
+
+const int N=11111;
+const int M=111111;
+const int INF=0xffffff;
+
+struct node
+{
+    int to;
+    int w;
+    int next;
+};
+
+node edge[N];
+int head[N];
+
+int dist[N][2],cnt[N][2];
+bool vis[N][2];
+int n,m,s,t,edges;
+
+void addedge(int u,int v,int w)
+{
+    edge[edges].w=w;
+    edge[edges].to=v;
+    edge[edges].next=head[u];
+    head[u]=edges++;
+}
+
+int dijkstra()
+{
+    int k;
+    for(int i=0; i<=n; i++)
+    {
+        dist[i][0]=dist[i][1]=INF;
+        vis[i][0]=vis[i][1]=0;
+        cnt[i][0]=cnt[i][1]=0;
+    }
+    cnt[s][0]=1,dist[s][0]=0;
+
+    for(int i=1; i<=n*2; i++)
+    {
+        int u=-1;
+        int min_dist=INF;
+        for(int j=1; j<=n; j++)
+            for(int flag=0; flag<2; flag++)
+                if(!vis[j][flag]&&dist[j][flag]<min_dist)
+                {
+                    min_dist=dist[j][flag];
+                    u=j;
+                    k=flag;
+                }
+        if(u==-1)
+            break;
+        vis[u][k]=true;
+        for(int e=head[u]; e!=-1; e=edge[e].next)
+        {
+            int j=edge[e].to;
+            int tmp=dist[u][k]+edge[e].w;
+
+            if(tmp<dist[j][0])//tmp小于最短路径长:
+            {
+                dist[j][1]=dist[j][0];//次短路径长
+                cnt[j][1]=cnt[j][0];//次短路径计数
+                dist[j][0]=tmp;//最短路径长
+                cnt[j][0]=cnt[u][k];//最短路径计数
+            }
+
+            else if(tmp==dist[j][0])//tmp等于最短路径长：
+            {
+                cnt[j][0]+=cnt[u][k];//最短路径计数
+            }
+
+            else if(tmp<dist[j][1])//tmp大于最短路径长且小于次短路径长：
+            {
+                dist[j][1]=tmp;//次短路径长
+                cnt[j][1]=cnt[u][k];//次短路径计数
+            }
+
+            else if(tmp==dist[j][1])//tmp等于次短路径长：
+            {
+                cnt[j][1]+=cnt[u][k];//次短路径计数
+            }
+        }
+    }
+
+    int res=cnt[t][0];
+    if(dist[t][0]+1==dist[t][1])//判断最短路和次短路是否相差1
+        res+=cnt[t][1];
+    return res;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int tcase;
+    scanf("%d",&tcase);
+    while(tcase--)
+    {
+        edges=0;
+        scanf("%d%d",&n,&m);
+        memset(head,-1,sizeof(head));
+        int u,v,w;
+        for(int i=0; i<m; i++)
+        {
+            scanf("%d%d%d",&u,&v,&w);
+            addedge(u,v,w);
+        }
+        scanf("%d%d",&s,&t);
+        printf("%d\n",dijkstra());
+    }
+    return 0;
+}
+
+
+
+```

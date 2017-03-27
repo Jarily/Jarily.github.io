@@ -1,0 +1,359 @@
+---
+layout: post
+title: 网络最大流基础算法
+author: "R. Liao" 
+categories: acm
+tags: 网络流
+---
+
+### 准备代码  
+```
+#include<iostream>
+#include<cstring>
+#include<queue>
+#include<cstdio>
+#include<algorithm>
+using namespace std;
+
+const int N = 10;
+const int MAX = 0xfffffff;
+int n,m;//n是点数，m是边数
+int source, sink;//source为源点，sink为汇点
+
+```
+
+### 1 EK算法  
+最大流EK算法的基本思想是在网络中找增广路径；  
+找到一条增广路径就计算这条路径可已通过的最大流；  
+即瓶颈边的容量。  
+然后修改这条路径上的每条边的容量；  
+如果在路径上就减去刚求出来的流量加上流量其他的边的容量不变；  
+然后在这个残留网路上再搜一条增广路径，直到没有增广路径为止。
+
+#### 代码实现
+```
+int map[N][N] , pre1[N];//map为网路，pre1为每个点的前驱
+bool vist[N];//标志一个点是否被访问
+bool EKBfs()//搜索增广路径
+{
+    queue<int>Q;
+    memset(pre1 , -1 , sizeof(pre1));
+    memset(vist , false , sizeof(vist));
+    Q.push(source);//先将源点压入队列
+    vist[source] = true;
+
+    while(!Q.empty())
+    {
+        int u = Q.front();
+        Q.pop();
+        if(u == sink) return true;//找到一条增广路径
+
+        for(int v = 1 ; v <= n ; v++)
+        {
+            if(map[u][v] && !vist[v])//边存在且v没被访问
+            {
+                vist[v] = true;
+                pre1[v] = u;
+                Q.push(v);
+            }
+        }
+    }
+    return false;//没找到增广路径
+}
+
+int EK()
+{
+    int maxFlow = 0 , minf;//minf为找到增广路径后路径上可以通过的最大流量
+
+    while(EKBfs())
+    {
+        minf = MAX;
+        int v = sink;
+        while(pre1[v] != -1)//从从汇点到源点找瓶颈边
+        {
+            minf = min(minf , map[pre1[v]][v]);
+            v = pre1[v];
+        }
+
+        maxFlow += minf;//最大流加上刚找到的流量
+        v = sink;
+        while(pre1[v] != -1)//修改这条路上的容量
+        {
+            int u = pre1[v];
+            map[u][v] -= minf;
+            map[v][u] += minf;
+            v = u;
+        }
+    }
+    return maxFlow;
+}
+```
+
+### 2 SAP算法  
+SAP算法也是每次都找一条从源点到汇点的增广路径;  
+只不过在找到一条增广路径之后并不是又从源点开始;  
+而是从当前找到的增广路径的瓶颈边往下找期望一次找到更多的边来减少搜索的时间。  
+再就是这个算法吸收的压入与重标记算法的顶点标号的方法；  
+给每个点一个标号，源点的标号最大不超过顶点的数量;  
+因为一条简单路径n个点最多只含n-1条边；  
+那么顶点标号实质就是从这个点出发到汇点要走的边的最少的数量。  
+当有边且h[u]=h[v]+1时我们称这条边是一条可行边；  
+每次找增广路径都沿着可行边；  
+当从某个点出发没有找到可行边就把这个点的标号标记为它的最小子点标号加一；  
+这样标号是一直增加的当有某个标号的的点的数量为0时；  
+这时不管在怎么找也不会有增广路径了仅退出计算。
+
+#### 代码实现  
+```
+struct Edge2//边的数据结构，c为边的容量
+{
+    int v , c , next;
+} edge2[25];
+
+int  head2[10] , pre2[10];//pre2为每个点的前驱
+//curEdge为从每个点出发的可行边的存储位置，high为每个点的高度标号，hNum为相应标号点的数量
+int curEdge[10] , high[10] , hNum[10];
+
+void addedge(int u , int v , int  c , int &num2)//增加一条边，及其反向边
+{
+    edge2[num2].c = c;
+    edge2[num2].v = v;
+    edge2[num2].next = head2[u];
+    head2[u] = num2++;
+
+    edge2[num2].c = 0;
+    edge2[num2].v = u;
+    edge2[num2].next = head2[v];
+    head2[v] = num2++;
+}
+
+int SAP()//最大流SAP算法
+{
+    int maxFlow = 0;//最大流
+    memset(high , 0 , sizeof(high));//初始化
+    memset(hNum , 0 , sizeof(hNum));
+    memset(pre2 , -1 , sizeof(pre2));
+
+    for(int i = 1 ; i <= n ; i++)//把当前边置为每个点的第一条边
+        curEdge[i] = head2[i];
+
+    hNum[0] = n;//高度为0的点的数量为n
+    int u = source;
+    while(high[source] < n)
+    {
+        if(u == sink)//当前为汇点说明找到一条增广路径
+        {
+            int minf = MAX , neck;
+            //从源点出发沿增广路径找瓶颈边
+            for(int k = source ; k != sink ; k = edge2[curEdge[k]].v)
+            {
+                if(minf > edge2[curEdge[k]].c)
+                {
+                    neck = k;
+                    minf = edge2[curEdge[k]].c;
+                }
+            }
+            //从源点出发把增广路径上的边的容量及其反向边的容量修改
+            for(int k = source ; k != sink ; k = edge2[curEdge[k]].v)
+            {
+                int tmp = curEdge[k];
+                edge2[tmp].c -= minf;
+                edge2[tmp^1].c += minf;
+            }
+            //最大流加上新增加的流
+            maxFlow += minf;
+            u = neck;//下次从瓶颈边开始找增广路径
+        }
+        //找从当前点出发的可行边
+        int k = curEdge[u];
+        for(; k != -1 ; k = edge2[k].next)
+        {
+            if(edge2[k].c && high[u] == high[edge2[k].v]+1)
+                break;
+        }
+
+        if(k != -1)//找到可行边
+        {
+            curEdge[u] = k;//将当前点出发的可行边的位置修改
+            pre2[edge2[k].v] = u;
+            u = edge2[k].v;//下次从可行边的下一个点搜索
+        }
+        else//没找到可行边
+        {
+            //当前点的标号要修改，所以先把对应的数量减一，如果为0就退出计算
+            if(--hNum[high[u]] == 0) break;
+            curEdge[u] = head2[u];//把可行边记为第一条边
+            int tmp = n ;
+            //找从当前点出发标号最小的点的标号
+            for(int k = head2[u] ; k != -1 ; k = edge2[k].next)
+            {
+                if(edge2[k].c)
+                    tmp = min(tmp , high[edge2[k].v]);
+            }
+
+            high[u] = tmp+1;//修改当前点的标号
+            hNum[high[u]]++;
+            if(u != source) u = pre2[u];//从当前点出发没有增广路，从其父结点开始搜
+        }
+    }
+    return  maxFlow;
+}
+
+
+```
+
+### 3 Dinic算法  
+Dinic算法和SAP算法有异曲同工之妙，它把残留网路变成分层网络;  
+每次寻找都找最短的路径去增广。  
+在残留网络上每个点都有一个层编号;  
+每次都按照level[v]=level[u]+1的边增广。  
+如果在残留网络里对每个点编号时无法对汇点编号;  
+则说明已经没有增广路了。
+
+#### 代码实现  
+```
+struct Edge3
+{
+    int v , c , next;
+} edge3[25];
+//level为每个点的层数编号
+int head3[10] , level[10];
+
+void addEdge(int u , int v , int c , int &num3)//添加一条边
+{
+    edge3[num3].v = v;
+    edge3[num3].c = c;
+    edge3[num3].next = head3[u];
+    head3[u] = num3++;
+
+    edge3[num3].c = 0;
+    edge3[num3].v = u;
+    edge3[num3].next = head3[v];
+    head3[v] = num3++;
+}
+
+bool searchLevel()//用bfs对每个点编号
+{
+    memset(level , -1 , sizeof(level));
+    queue<int>Q;
+    Q.push(source);
+    level[source] = 0;
+
+    while(!Q.empty())
+    {
+        int u = Q.front();
+        if(u == sink) return true;
+        Q.pop();
+
+        for(int k = head3[u] ; k != -1 ; k = edge3[k].next)
+        {
+            int v = edge3[k].v;
+            if(edge3[k].c && level[v] == -1)
+            {
+                level[v] = level[u]+1;
+                Q.push(v);
+            }
+        }
+    }
+    return false;
+}
+
+int DinicDfs(int u , int minf)
+{
+    //minf为当前增广路径中瓶颈边的容量
+    if(u == sink)
+        return minf;
+
+    int ret = 0;//从当前这个点出发找到的所有流量之和
+    for(int k =  head3[u] ; k != -1 ; k = edge3[k].next)
+    {
+        int v = edge3[k].v;
+        if(edge3[k].c && level[v] == level[u]+1)
+        {
+            //min(minf-ret , edge1[k].c)的意思是修改增广路径中瓶颈边的容量
+            int f = DinicDfs(v , min(minf-ret , edge3[k].c));
+            edge3[k].c -= f;
+            edge3[k^1].c += f;
+            ret +=f;
+            //瓶颈边的容量被消耗殆尽说明从当前点出发没有增广路了，要回朔
+            if(ret == minf) return ret;
+        }
+    }
+    return ret;
+}
+
+int Dinic()
+{
+    int maxFlow = 0;
+    while(searchLevel())//残留网络还可以分层说明从源点到汇点还可以找增广路径
+    {
+        maxFlow += DinicDfs(source , MAX);
+    }
+    return maxFlow;
+}
+```
+
+### 4 测试运行
+
+#### 测试数据：  
+
+*算法导论Page405*
+
+```
+6 10  
+
+1 2 16  
+
+1 3 13  
+
+2 3 10  
+
+2 4 12  
+
+3 2 4  
+
+3 5 14  
+
+4 3 9  
+
+5 4 7  
+
+5 6 4  
+
+4 6 20
+
+```
+
+#### 测试代码
+```
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(cin>>n>>m)
+    {
+        for(int i = 1 ; i <= n ; i++)//初始化
+            for(int j = 1 ; j <= n ; j++)
+                map[i][j] = 0;
+
+        memset(head2 , -1 , sizeof(head2));
+        memset(head3 , -1 , sizeof(head3));
+        for(int i = 0 , num2 = 0 , num3 = 0; i < m ; i++)
+        {
+            int u,v,c;
+            cin>>u>>v>>c;
+            map[u][v] = c;//EK
+            addedge(u , v , c , num2);//SAP
+            addEdge(u , v , c , num3);//Dinic
+        }
+
+        source = 1 , sink = 6;
+        int max_flow1 = EK();
+        int max_flow2 = SAP();
+        int max_flow3 = Dinic();
+        cout<<"max_flow1=="<<max_flow1<<endl;
+        cout<<"max_flow2=="<<max_flow2<<endl;
+        cout<<"max_flow3=="<<max_flow3<<endl;
+    }
+    return 0;
+}
+```

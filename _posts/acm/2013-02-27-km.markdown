@@ -1,0 +1,171 @@
+---
+layout: post
+title:   带权的二分图的最优匹配KM算法
+author: "R. Liao" 
+categories: acm
+tags: 二分匹配
+---
+
+### 基本概念   
+给定一个完全二分图G=(X∪Y，X×Y),其中边(x,y)有权w(x,y);  
+要找一个从X到Y具有最大权和的匹配M，即为二分图的最优匹配问题;  
+KM(Kuhn_Munkras)算法求的是完备匹配下的最大权匹配;  
+
+### 算法思想  
+KM算法是通过给每个顶点一个标号（叫做顶标）来把求最大权匹配的问题转化为求完备匹配的问题的;  
+设顶点Xi的顶标为A[i]，顶点Yi的顶标为B[i]，顶点Xi与Yj之间的边权为w[i,j];  
+在算法执行过程中的任一时刻，对于任一条边(i,j)，A[i]+B[j]>=w[i,j]始终成立;  
+初始A[i]为与Xi相连的边的最大边权，B[j]=0;  
+
+**KM算法的正确性基于以下定理**
+
+* 设G(V,E)为二分图,G'(V,E')为该二分图的子图;  
+如果对于G'中的任何边<x,y>满足， A(x)+ B(y)==W[x,y];  
+则称G'(V,E')为G(V,E)的等价子图或相等子图(是G的生成子图);  
+若由二分图中所有满足A[i]+B[j]=w[i,j]的边(i,j)构成的子图（称做相等子图）有完备匹配;    
+那么这个完备匹配就是二分图的最大权匹配;  
+
+* 因为对于二分图的任意一个匹配，如果它包含于相等子图;  
+那么它的边权和等于所有顶点的顶标和；  
+如果它有的边不包含于相等子图，那么它的边权和小于所有顶点的顶标和(即不是最优匹配);  
+所以相等子图的完备匹配一定是二分图的最大权匹配;  
+
+* 相等子图包含原图的所有的点，相等子图一定可以找到完备匹配;  
+相等子图的完备匹配只需加一些虚拟点可以扩充为完美匹配(记为M);  
+完美匹配是包含了所有点的匹配，那么所有点的顶点的标号值都包括进来了;  
+虽然有些点是0，在这个状态下，把相等子图的标号一一对应的标到原图上去;  
+原图的任意一个匹配最多只能包含原图的所有顶点;  
+即任何匹配的权和不可能超过所有标号的和，所以M的和必然是最优的;  
+
+### 算法改进  
+给每个Y顶点一个"松弛量"函数slack;  
+每次开始找增广路时初始为无穷大;  
+在寻找增广路的过程中，检查(i,j)时，如果它不在相等子图中;  
+则让slack[j]=min(原值,A[i]+B[j]-W[i,j]);  
+这样在修改顶标时，取所有的不在交错树中的Y顶点的slack值中的最小值作为d值即可;  
+
+### 算法过程  
+①初始化可行顶标的值;  
+②用匈牙利算法寻找完备匹配;  
+③若未找到完备匹配则修改可行顶标的值;  
+④重复②③直到找到相等子图的完备匹配;
+
+### 代码实现
+```
+#include<iostream>
+#include<cstring>
+#include<cstdlib>
+#include<cstdio>
+#include<climits>
+#include<algorithm>
+using namespace std;
+
+const int N = 1000;
+const int INF = 0xffffff;
+int w[N][N];//权值
+int lx[N],ly[N]; //顶标
+int linky[N];//记录与i匹配的顶点
+int visx[N],visy[N];
+int slack[N];//松弛量
+int nx,ny;//二分图两边的顶点数
+
+void init()
+{
+    memset(linky,-1,sizeof(linky));//记录与i匹配的顶点
+    memset(ly,0,sizeof(ly));///初始化顶标y为0
+    for(int i = 0; i < nx; i++)
+        for(int j = 0,lx[i] = -INF; j < ny; j++)
+        {
+            if(w[i][j] > lx[i])
+                lx[i] = w[i][j];///初始化顶标x为与顶点Xi关联的边的最大权
+        }
+
+}
+
+bool find(int x)//匈牙利算法
+{
+    visx[x] = true;
+    for(int y = 0; y < ny; y++)
+    {
+        if(visy[y])
+            continue;
+        int t = lx[x] + ly[y] - w[x][y];//若t==0，则为最大权匹配；
+
+        if(t==0)
+        {
+            visy[y] = true;
+            if(linky[y]==-1 || find(linky[y]))
+            {
+                linky[y] = x;
+                return true;        //找到增广轨
+            }
+        }
+
+        else if(slack[y] > t)
+            slack[y] = t;
+    }
+    return false;                   //没有找到增广轨（说明顶点x没有对应的匹配，与完备匹配(相等子图的完备匹配)不符）
+}
+
+int KM()                //返回最优匹配的值
+{
+    init();
+    for(int x = 0; x < nx; x++)
+    {
+        for(int i = 0; i < ny; i++)
+            slack[i] = INF;//松弛函数初始化为无穷大
+
+        while(1)
+        {
+            memset(visx,0,sizeof(visx));
+            memset(visy,0,sizeof(visy));
+            if(find(x))                     //找到增广轨，退出
+                break;
+            int d = INF;
+            for(int i = 0; i < ny; i++)          //没找到，对l做调整(这会增加相等子图的边)，重新找
+            {
+                if(!visy[i] && d > slack[i])
+                    d = slack[i];
+            }
+            for(int i = 0; i < nx; i++)//修改x的顶标
+            {
+                if(visx[i])
+                    lx[i] -= d;
+            }
+            for(int i = 0; i < ny; i++)//修改y的顶标
+            {
+                if(visy[i])
+                    ly[i] += d;
+                else
+                    slack[i] -= d;//修改顶标后，不在交错树中的y顶点的slack值都要减去d；
+            }
+        }
+
+    }
+
+    int result = 0;
+    for(int i = 0; i < ny; i++)
+    {
+        if(linky[i]>-1)
+            result += w[linky[i]][i];
+    }
+    return result;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(~scanf("%d%d",&nx,&ny))
+    {
+        if(!nx||!ny)
+            break;
+        int a,b,c;
+        while(scanf("%d%d%d",&a,&b,&c),a+b+c)
+        {
+            w[a][b]=c;
+        }
+        printf("%d\n",KM());
+    }
+    return 0;
+}
+```

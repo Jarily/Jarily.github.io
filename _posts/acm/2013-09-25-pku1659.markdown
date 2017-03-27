@@ -1,0 +1,126 @@
+---
+layout: post
+title:  PKU1659(Frogs' Neighborhood)-简单图的判定+构造，Havel定理
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Frogs' Neighborhood](http://poj.org/problem?id=1659)
+
+### 题意           
+给出一个图的每个点的度的序列,求能否构成一个简单图,如果能构出简单图,则输出图的邻接矩阵;
+
+### 分析      
+**Havel定理的应用**  
+给定一个非负整数序列{dn},若存在一个无向图使得图中各点的度与此序列一一对应,则称此序列可图化;  
+若图为简单图，则称此序列**可简单图化**;  
+  
+**可图化的判定**  
+d1+d2+……dn==0(mod 2);  
+  
+#### 处理过程    
+每次处理度数最大的点,设其度数为d则将他与度数最大的d个点(不含自己)个连一条边(若该点度数大于0),更新度数;  
+重复上面操作,如果最后恰好所有度数为0则为可行方案；
+
+### 代码
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 1659
+#	   @date		 2013/09/25
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstdlib>
+#include<algorithm>
+#include<cstring>
+using namespace std;
+
+const int N=20;
+int map[N][N];
+int n;
+
+struct node
+{
+    int degree;
+    int id;
+} a[N];
+
+bool cmp(node x , node y)
+{
+    return x.degree>y.degree;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int t1;
+    scanf("%d",&t1);
+    int t2=0;
+    while(t1--)
+    {
+    	if(t2)
+    	puts("");
+    	t2++;
+        memset(map,0,sizeof(map));
+        scanf("%d",&n);
+        int sum=0;
+        for(int i=0; i<n; i++)
+        {
+            scanf("%d",&a[i].degree);
+            a[i].id=i;
+            sum+=a[i].degree;
+        }
+        if(sum%2)
+        {
+            puts("NO");
+            continue;
+        }
+
+        int flag=0;
+        for(int i=0; i<n; i++)
+        {
+            sort(a,a+n,cmp);
+            if(a[0].degree==0)
+            {
+                flag=1;
+                break;
+            }
+            for(int j=0; j<a[0].degree; j++)
+            {
+                a[j+1].degree--;
+                int x=a[0].id;
+                int y=a[j+1].id;
+                map[x][y]=map[y][x]=1;
+                if(a[j+1].degree<0)
+                {
+                    flag=2;
+                    break;
+                }
+            }
+            a[0].degree=0;
+            if(flag==2)
+                break;
+        }
+        if(flag==1)
+        {
+            puts("YES");
+            for(int i=0; i<n; i++)
+            {
+                int j=0;
+                for(; j<n-1; j++)
+                    printf("%d ",map[i][j]);
+                printf("%d\n",map[i][j]);
+            }
+        }
+        else
+            puts("NO");
+    }
+    return 0;
+}
+
+
+```

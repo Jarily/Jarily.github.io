@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  {% include head.html %}
+
+  <body>
+
+
+<div class="wrapper">
+  <center>    <!-- <a href="{{page.url}}"><div class="site-title">   {{page.title }}  </div></a>   -->
+ 
+  <h1 class="post-title" itemprop="name headline"><a class="post-title-link"  href="{{page.url}}">{{ page.title }}</a></h1>
+ </center>
+</div>
+
+<!-- <div class="wrapper site-description">
+<center>  {{site.description}} <br> </center>
+</div>  -->
+
+  <center>  <p class="post-meta"><time datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">{{ page.date | date: "%b %-d, %Y" }}</time></p>
+    {% if page.author %}
+     <div class="">
+       <center><p ><strong>
+	   <!--<span class="authorKeyword">Author</span> -->
+	   <span class="small-site-title"> <h3 style="letter-spacing: 3px !important;
+       text-transform: uppercase !important;">{{page.author}}</h3></span></strong></p></center>
+
+     </div>
+     {% endif %}
+   </center>
+
+
+
+<div class="wrapper">
+  <div class="trigger site-navigation">
+    <!-- <a class="page-link" href="{{site.url}}{{site.baseurl}}">HOME</a> -->
+	<a class="page-link" href="/index/">HOME</a>
+    {% for sitePage in site.pages %}
+    {% if sitePage.title %}
+
+    <span class="exclamationMark">/</span><a class="page-link" href="{{sitePage.url | prepend: site.baseurl }}">{{sitePage.title}}</a>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+
+
+
+
+    <div class="page-content">
+      <div class="wrapper">
+
+
+
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <!--<h5 class="post-title" itemprop="name headline" color="red"><a class="post-title-link"  href="{{page.url}}">{{ page.title }}</a></h5>  
+
+	<a class="post-title-link"  href="{{page.url}}">{{ page.title }}</a>-->
+
+
+
+
+
+  </header>
+
+
+  <div class="post-content" itemprop="articleBody">
+    {{ content }}
+  </div>
+
+  <footer class="postNavigation">
+  {% if page.previous.url %}
+    <a class="postPrev" href="{{page.previous.url}}">
+        &laquo; {{page.previous.title}}
+    </a>
+  {% endif %}
+  {% if page.next.url %}
+    <a class="postNext" href="{{page.next.url}}">
+        {{page.next.title}} &raquo;
+    </a>
+  {% endif %}
+  </footer>
+
+
+</article>
+
+
+
+
+      </div>
+    </div>
+
+    {% include footer.html %}
+
+  </body>
+
+</html>

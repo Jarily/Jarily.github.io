@@ -1,0 +1,82 @@
+---
+layout: post
+title: Osmosis工具的安装与使用
+author: "R. Liao" 
+categories: study
+tags: Osmosis
+---
+
+### 基本介绍  
+最近在做一个课题，结果需要交通仿真输出，其中的地图文件用到的是openstreetmap数据用的是xml结构的osm文件。  
+而Osmosis是专门用来处理osm格式地图数据的一种用Java写的命令行工具，适合于各种平台。  
+
+
+关于osmosis的详细介绍，可以点击[链接](http://wiki.openstreetmap.org/wiki/Zh-hans:Osmosis) ，里面详细介绍了osmosis的功能、各种平台下的安装方法、以及使用例子
+
+
+### 下载地址  
+上面的链接中已经有下载地址了，当然也可以点击[下载](http://dev.openstreetmap.org/~bretth/osmosis-build/osmosis-latest.zip)
+
+### 安装
+
+安装之前必需要配置Java环境，JDK必需是1.6或者以上，cmd下，输入java -version。
+安装只需要把压缩包解压到任意目录。
+然后双击bin文件夹里面的osmosis.bat文件。cmd下cd到解压路径的bin文件夹下，输入osmosis命令：
+ ![安装成功](/images/study/2016-08-10/1.png)
+
+
+显示如果跟上图差不多说明安装成功。
+
+### 简单使用  
+
+我做的是利用osmosis把osm下载的地图进行裁剪和提取主干道然后转换成.osm文件。
+
+**注意**
+下面在cmd上的所有操作都是在osmosis解压路径的bin文件夹下面，同时，为了方便起见，我把需要操作的文件也放在这个文件夹下面，当然可以自己指定路径。
+
+
+#####  （1）地图裁剪
+
+我的源文件为从osm下载的北京市的bj.osm.pbf文件，我需要在裁剪出二环区域的地图，输出文件为allroads.osm.pbf。
+cmd下输入以下命令
+
+``` 
+
+osmosis --rb file=bj.osm.pbf --bounding-box top=39.9550 left=116.3438 bottom=39.892 right=116.4352 completeWays=true --used-node --wb allroads.osm.pbf 
+
+```
+
+其中--bounding-box后边的参数即要截取的北京市二环上下左右的边界范围
+
+
+#####  （2）主干道提取
+
+cmd下输入以下命令
+
+```
+osmosis --rb file=allroads.osm.pbf --tf accept-ways highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link --used-node --wb bj-bigroads.osm.pbf 
+```
+
+
+#####  （3）pbf转换为osm
+
+cmd下输入以下命令
+
+```
+osmosis --rb bj-bigroads.osm.pbf --wx bj.osm 
+
+```
+
+### 效果显示  
+
+得到的.osm可以通过MATSim的API函数转换后得到最终需要的.xml文件，方法见[链接](http://jarily.com/2016/08/10/network-xml.html)
+
+转换完成后可以把得到的.XML文件放到Via可视化软件中查看一下。
+
+我的地图是提取后的北京市二环的地图。效果如下：
+
+没有提取主干道的效果：
+ ![1](/images/study/2016-08-10/2.png)
+
+提取了主干道的效果：
+ ![2](/images/study/2016-08-10/3.png)

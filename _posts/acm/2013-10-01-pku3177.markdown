@@ -1,0 +1,141 @@
+---
+layout: post
+title:   PKU3177(Redundant Paths)-双连通，桥
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Redundant Paths](http://poj.org/problem?id=3177)
+
+### 题意             
+有F个牧场,1<=F<=5000,现在一个牧群经常需要从一个牧场迁移到另一个牧场;  
+奶牛们已经厌烦老是走同一条路,所以有必要再新修几条路,这样它们从一个牧场迁移到另一个牧场时总是可以选择至少两条独立的路;  
+现在F个牧场的任何两个牧场之间已经至少有一条路了,奶牛们需要至少有两条;  
+给定现有的R条直接连接两个牧场的路,F-1<=R<=10000;  
+计算至少需要新修多少条直接连接两个牧场的路,使得任何两个牧场之间至少有两条独立的路;  
+两条独立的路是指没有公共边的路,但可以经过同一个中间顶点;
+
+### 分析            
+求最少添加多少条边可变无桥的连通图;  
+求双连通分量以及构造双连通分量：  
+对于点双连通分支,实际上在求割点的过程中就能顺便把每个点双连通分支求出;  
+建立一个栈,存储当前双连通分支,在搜索图时,每找到一条树枝边或后向边(非横叉边),就把这条边加入栈中;  
+如果遇到某时满足DFS(u)<=Low(v),说明u是一个割点;  
+同时把边从栈顶一个个取出,直到遇到了边(u,v),取出的这些边与其关联的点,组成一个点双连通分支;  
+割点可以属于多个点双连通分支,其余点和每条边只属于且属于一个点双连通分支;
+  
+对于边双连通分支,在求出所有的桥以后,把桥边删除;  
+原图变成了多个连通块,则每个连通块就是一个边双连通分支;  
+桥不属于任何一个边双连通分支,其余的边和每个顶点都属于且只属于一个边双连通分支;  
+
+一个有桥的连通图,通过加边变成边双连通图的方法为:  
+首先求出所有的桥,然后删除这些桥边,剩下的每个连通块都是一个双连通子图;  
+把每个双连通子图收缩为一个顶点,再把桥边加回来,最后的这个图一定是一棵树,边连通度为1;  
+统计出树中度为1的节点的个数,即为叶节点的个数,记为leaf;  
+则至少在树上添加(leaf+1)/2条边,就能使树达到边双连通,所以至少添加的边数就是(leaf+1)/2;  
+
+具体方法为,首先把两个最近公共祖先最远的两个叶节点之间连接一条边;  
+这样可以把这两个点到祖先的路径上所有点收缩到一起,因为一个形成的环一定是双连通的;  
+然后再找两个最近公共祖先最远的两个叶节点,这样一对一对找完,恰好是(leaf+1)/2次,把所有点收缩到了一起;
+
+### 代码
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 3177
+#	   @date		 2013/10/01
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<queue>
+#include<algorithm>
+using namespace std;
+
+const int N=5555;
+
+struct edge
+{
+    int to;
+    int next;
+};
+
+edge G[N];
+int head[N];
+int n,m,idx,cnt;
+int low[N],visit[N],degree[N];
+bool map[N][N];
+
+void Addedge(int u,int v)
+{
+    G[idx].to=v;
+    G[idx].next=head[u];
+    head[u]=idx++;
+}
+
+void dfs(int x, int p)
+{
+    visit[x]=true;
+    low[x]=cnt++;
+    for(int i=head[x]; i!=-1; i=G[i].next)
+    {
+        int j=G[i].to;
+        if(j==p)
+            continue;
+        if(!visit[j])
+            dfs(j,x);
+        low[x]=min(low[x],low[j]);
+    }
+}
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(~scanf("%d%d",&n,&m))
+    {
+        memset(head,-1,sizeof(head));
+        memset(visit,0,sizeof(visit));
+        memset(map,0,sizeof(map));
+
+        idx=cnt=0;
+        int u,v;
+        while(m--)
+        {
+            scanf("%d%d",&u,&v);
+            if(!map[u][v])
+            {
+                map[u][v]=map[v][u]=true;
+                Addedge(u,v);
+                Addedge(v,u);
+            }
+        }
+
+        dfs(1,1);
+        for(int i=1; i<=n; i++)
+        {
+            for(int u=head[i]; u!=-1; u=G[u].next)
+            {
+                int j=G[u].to;
+                if(low[i]!=low[j])
+                    degree[low[i]]++;
+            }
+        }
+
+        int res=0;
+        for(int i=0; i<=n; i++)
+        {
+            if(degree[i]==1)
+            {
+                res++;
+            }
+        }
+        printf("%d\n",(res+1)>>1);
+    }
+    return 0;
+}
+
+
+```

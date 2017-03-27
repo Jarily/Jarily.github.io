@@ -1,0 +1,178 @@
+---
+layout: post
+title: 并查集分析与扩展
+author: "R. Liao" 
+categories: acm
+tags: 并查集
+---
+
+### 一 并查集的基础
+
+#### 1 基本功能  
+并查集用于处理不相交数据集合;
+
+#### 2 基本操作  
+
+##### (1)查找一个元素的祖先(即查找这个元素属于哪个集合);  
+
+##### (2)将两个元素所在的集合合并为一个集合;  
+
+##### (3)删除操作,即把某个元素从它所在的集合中删除;  
+
+#### 3 基本代码
+
+```
+#include<iostream>
+#include<cstring>
+#include<cstdio>
+using namespace std;
+
+const int N=30030;
+int n;
+int f[N],rank[N],num[N];
+
+void init()//初始化
+{
+    for(int i=1; i<=n; i++)
+        f[i]=i;
+}
+
+int getFather(int x)//查找元素x的祖先
+{
+    if(f[x]==x)
+        return f[x];
+    f[x]=getFather(f[x]);//路径压缩
+    return f[x];
+}
+
+void unionSet(int x,int y)//将两个元素所在的集合合并为一个集合
+{
+    int xx=getFather(x),yy=getFather(y);
+    if(xx!=yy)
+        f[xx]=yy;
+}
+```
+
+### 二 并查集的扩展  
+
+#### 1 记录每个集合的元素个数  
+在此初始化以及合并集合的时候处理一下集合的元素个数即可;  
+
+##### 代码
+```
+void _init()
+{
+    int i;
+    for(i=1; i<=n; i++)
+        f[i]=i,num[i]=1;
+}
+
+void _unionSet(int x,int y)
+{
+    int xx=getFather(x),yy=getFather(y);
+    if(xx!=yy)
+        f[xx]=yy,num[yy]+=num[xx];
+}
+```
+
+#### 2 并查集的删除  
+
+即把某个元素从它所在的集合中删除;    
+即生成若干个超级父亲，每个节点的父亲都是一个超级父亲;    
+删除就直接令自己的父亲等于自己;  
+
+##### 代码  
+```
+int s;
+void __init()
+{
+    for(int i=1; i<=n; i++)
+        f[i]=i;
+    s=n+1;
+}
+
+int __getFather(int x)
+{
+    if(f[x]==x)
+        return f[x];
+    f[x]=getFather(f[x]);
+    return f[x];
+}
+
+void __unionSet(int x,int y)
+{
+    int xx=getFather(x),yy=getFather(y);
+    if(xx!=yy)
+    {
+        if(xx>n)
+            f[yy]=xx;
+        else if(yy>n)
+            f[xx]=yy;
+        else
+            f[xx]=s,f[yy]=s,f[s]=s,s++;
+    }
+}
+
+void deleteX(int x)
+{
+    f[x]=x;
+}
+```
+
+#### 3 rank数组的应用;
+其基本定义是一个元素到它的祖先的路径长度;
+
+### 三 算法应用-HDU2818;  
+
+#### 1 题目链接  
+[Building Block](http://acm.hdu.edu.cn/showproblem.php?pid=2818)
+
+#### 2 题目大意  
+
+有n个箱子,然后是两种操作:  
+
+##### (1)把x所在的那一摞箱子搬到y所在的那一摞上面;  
+
+##### (2)询问x的下面有几个箱子;
+
+#### 3 代码
+```
+int getF(int x)
+{
+    if(f[x]==x)
+        return x;
+    int t=f[x];//做完getFather之后再更新rank
+    f[x]=getF(f[x]),rank[x]+=rank[t];//rank[x]代表x到它的祖先的距离,即x的上面还有几个箱子
+    return f[x];
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    char te[5];
+    while(~scanf("%d",&n))
+    {
+        for(int i=0; i<=30000; i++)
+            f[i]=i,num[i]=1,rank[i]=0;
+        for(int i=0; i<n; i++)
+        {
+            int x,y;
+            scanf("%s",te);
+            if(te[0]=='M')
+            {
+                scanf("%d%d",&x,&y);
+                int xx=getF(x);
+                int yy=getF(y);
+                if(xx!=yy)
+                    f[yy]=xx,rank[yy]=num[xx],num[xx]+=num[yy];
+            }
+            else
+            {
+                scanf("%d",&x);
+                printf("%d\n",num[getF(x)]-rank[x]-1);
+            }
+        }
+    }
+    return 0;
+}
+```

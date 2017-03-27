@@ -1,0 +1,77 @@
+---
+layout: post
+title:  HDU4221(Greedy?)贪心算法
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接
+[Greedy?](http://acm.hdu.edu.cn/showproblem.php?pid=4221)
+
+### 题意    
+有n个任务，已知完成每个任务的最少时间和最多时间；  
+如果完成某个任务时总的花费超过了它的最多时间，则要罚款，数额为超过的时间t；  
+问你在最短完成所有任务的时候，每个任务的t最大为多少(开始题目一直没看懂)；  
+
+### 算法
+几乎是裸的贪心，先把任务按最多时间从小到大排序；  
+因为开始总的花费相对比较少，自然要把最大时间花费的往前移；  
+如果最大花费时间相同，则按最小时间从到小排序；  
+然后注意下数据范围就OK了；  
+
+### 代码  
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 4221
+#	   @date		 2012/12/28
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cmath>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+
+typedef __int64 INT;
+const int N=100010;
+
+struct work
+{
+    int x,y;
+} a[N];
+
+bool cmp(work a,work b)
+{
+    if(a.y==b.y)
+        return a.x>b.x;
+    return a.y<b.y;
+}
+
+int main()
+{
+    int n,m;
+    scanf("%d",&n);
+    int T=0;
+    while(n--)
+    {
+        T++;
+        scanf("%d",&m);
+        for(int i=0; i<m; i++)
+        {
+            scanf("%d%d",&a[i].x,&a[i].y);
+        }
+        sort(a,a+m,cmp);
+        INT max=0;
+        INT sum=0;
+        for(INT i=0; i<m; i++)
+        {
+            sum+=a[i].x;
+            if(sum-a[i].y>max)
+                max=sum-a[i].y;
+        }
+        printf("Case %d: %I64d\n",T,max);
+    }
+}
+```

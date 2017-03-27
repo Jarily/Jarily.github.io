@@ -1,0 +1,94 @@
+---
+layout: post
+title:  PKU3461(Oulipo)字符串匹配-KMP算法
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Oulipo](http://poj.org/problem?id=3461)
+
+### 题意         
+求第一个字符串在第二个字符串中出现的次数;  
+即求主串能与子串进行多少次匹配;
+
+### 分析      
+KMP算法,在发生失配时,文本串不需要回溯;  
+而是利用已经得到的"部分匹配"结果将模式串右移尽可能远的距离,继续进行比较;  
+模式串不一定向右移动一个字符的位置;  
+右移也不一定必须从模式串起点处重新试匹配;  
+即模式串一次可以右移多个字符的位置,右移后可以从模式串起点后的某处开始试匹配;
+
+### 代码    
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 3461
+#	   @date		 2013/03/30
+============================================================================**/
+#include<iostream>
+#include<string>
+#include<cstring>
+#include<cstdio>
+using namespace std;
+
+const int N=1000010;//文本串的最大长度
+const int M=10010;//模式串的最大长度
+
+int n;//文本串的实际长度
+int m;//模式串的实际长度
+char T[N];//文本串
+char P[M];//模式串
+int next[M];
+
+void GetNext()//计算模式串P的next函数
+{
+    int j=-1;
+    next[0]=-1;
+    for(int i=1; i<m; i++)
+    {
+        while(j>=0&&P[j+1]!=P[i])
+            j=next[j];
+        if(P[j+1]==P[i])
+            j++;
+        next[i]=j;
+    }
+}
+
+int KMP()
+{
+    int j=-1;
+    int sum=0;
+    for(int i=0; i<n; i++)
+    {
+        while(j>=0&&P[j+1]!=T[i])//当模式串p中的下一个字符不与文本字符匹配时，
+            j=next[j];
+        if(P[j+1]==T[i])//当模式串p中的下一个字符与文本字符匹配时
+            j++;
+        if(j+1==m)//即模式串p的所有字符都与文本串字符匹配
+            sum++;
+    }
+    return sum;
+}
+
+int main()
+{
+   //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int tcase;
+    scanf("%d",&tcase);
+    while(tcase--)
+    {
+        scanf("%s",P);
+        scanf("%s",T);
+        m=strlen(P);
+        n=strlen(T);
+        GetNext();
+        printf("%d\n",KMP());
+    }
+    return 0;
+}
+
+
+```

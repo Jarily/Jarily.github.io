@@ -1,0 +1,203 @@
+---
+layout: post
+title: HDU4280(Island Transport)最大流SAP算法+当前弧优化
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Island Transport](http://acm.hdu.edu.cn/showproblem.php?pid=4280)
+
+### 题意    
+有N个岛屿,M条无向路,每个路有一最大允许的客流量,求从最西的那个岛屿最多能运用多少乘客到最东的那个岛屿;  
+
+### 分析  
+最大流SAP算法+当前弧优化  
+**当前弧优化**  
+为了使每次找增广路的时间变成均摊O(V),对于每个点保存“当前弧”:初始时当前弧是邻接表的第一条弧;  
+在邻接表中查找时从当前弧开始查找,找到了一条允许弧,就把这条弧设为当前弧;  
+改变距离标号时,把当前弧重新设为邻接表的第一条弧;
+
+### 代码  
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 4280
+#	   @date		 2013/11/23
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<cmath>
+#include<cstdlib>
+#include<string>
+#include<queue>
+#include<algorithm>
+using namespace std;
+
+const int N=100010;
+const int M=400010;
+const int INF=0xfffffff;
+
+int n,m,cnt;
+
+struct Edge
+{
+    int v , cap , next;
+} edge[M];
+
+int head[N],pre[N],d[N],numd[N];//分别为链表的头指针，每个点的前驱，每个点的d值，以及标号为d[i] 的点的个数
+int cur_edge[N];//从每个点出发满足d[i] = d[j] + 1的边的地址 ， 插入边时的计数，源点与汇点
+
+void AddEdge(int u,int v,int c)
+{
+    edge[cnt].v=v;
+    edge[cnt].cap=c;
+    edge[cnt].next=head[u];
+    head[u]=cnt++;
+
+    edge[cnt].v=u;
+    edge[cnt].cap=0;
+    edge[cnt].next=head[v];
+    head[v]=cnt++;
+}
+
+void bfs(int sink)//先用广度优先算出每个点的d值
+{
+    memset(numd,0,sizeof(numd));
+    for(int i=1; i<=n; i++)
+        numd[d[i]=n]++;
+    d[sink]=0;
+    numd[n]--;
+    numd[0]++;
+    queue<int> Q;
+    Q.push(sink);
+
+    while(!Q.empty())
+    {
+        int v=Q.front();
+        Q.pop();
+
+        int i=head[v];
+        while(i!=-1)
+        {
+            int u=edge[i].v;
+
+            if(d[u]<n)
+            {
+                i=edge[i].next;
+                continue ;
+            }
+
+            d[u]=d[v]+1;
+            numd[n]--;
+            numd[d[u]]++;
+            Q.push(u);
+            i=edge[i].next;
+        }
+    }
+}
+
+int SAP(int source,int sink)
+{
+    for(int i=1; i<=n; i++)
+        cur_edge[i]=head[i];   //当前满足d[i] = d[j] + 1的边的为第一条边
+    int max_flow=0;
+    bfs(sink);
+    int u=source ;//从源点搜一条到汇点的增广路
+    while(d[source]<n)//就算所有的点连成一条线源点的d值也是最多是n-1
+    {
+        if(u==sink)//如果找到一条增广路径
+        {
+            int cur_flow=INF,neck;//找到那条瓶颈边
+            for(int from=source; from!=sink; from=edge[cur_edge[from]].v)
+            {
+                if(cur_flow>edge[cur_edge[from]].cap)
+                {
+                    neck=from;
+                    cur_flow=edge[cur_edge[from]].cap;
+                }
+            }
+
+            for(int from=source; from!=sink; from=edge[cur_edge[from]].v) //修改增广路上的边的容量
+            {
+                int tmp=cur_edge[from];
+                edge[tmp].cap-=cur_flow;
+                edge[tmp^1].cap+=cur_flow;
+            }
+            max_flow+=cur_flow;//累加计算最大流
+            u=neck;//下一次搜索直接从瓶颈边的前一个节点搜起
+        }
+
+        int i;
+        for(i=cur_edge[u]; i!=-1; i=edge[i].next) //从当前点开始找一条允许弧
+            if(edge[i].cap&&d[u]==d[edge[i].v]+1)//如果找到跳出循环
+                break;
+
+        if(i!=-1)//找到一条允许弧
+        {
+            cur_edge[u]=i;//从点u出发的允许弧的地址
+            pre[edge[i].v]=u;//允许弧上下一个点的前驱为u
+            u=edge[i].v;//u变成下一个点继续搜直到搜出一条增广路
+        }
+        else  //如果没有搜到允许弧
+        {
+            numd[d[u]]--; //d[u]将被修改所以numd[d[u]]减一
+            if(!numd[d[u]]) break;  //如果没有点的d值为d[u]则不可能再搜到增广路结束搜索
+            cur_edge[u]=head[u];  //当前点的允许弧为第一条边
+            int tmp=n;
+            for(int j=head[u]; j!=-1; j=edge[j].next) //搜与u相连的点中d值最小的
+                if(edge[j].cap&&tmp>d[edge[j].v])
+                    tmp=d[edge[j].v];
+
+            d[u]=tmp+1; //修改d[u]
+            numd[d[u]]++;
+            if(u!= source)
+                u=pre[u];//从u的前驱搜，因为从u没有搜到允许弧
+        }
+    }
+    return max_flow;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int tcase;
+    scanf("%d",&tcase);
+    while(tcase--)
+    {
+        scanf("%d%d",&n,&m);
+        int x,y,source,sink;
+        int Min=INF, Max=-INF;
+        for(int i=1; i<=n; i++)
+        {
+            scanf("%d%d",&x,&y);
+            if(x<=Min)//源点
+            {
+                source=i;
+                Min=x;
+            }
+            if(x>=Max)//汇点
+            {
+                sink=i;
+                Max=x;
+            }
+        }
+        memset(head,-1,sizeof(head));
+        cnt=0;
+        int u,v,w;
+        for(int i=0; i<m; i++)
+        {
+            scanf("%d%d%d",&u,&v,&w);
+            AddEdge(u,v,w);
+            AddEdge(v,u,w);
+        }
+        int ans=SAP(source,sink);
+        printf("%d\n",ans);
+    }
+    return 0;
+}
+
+```

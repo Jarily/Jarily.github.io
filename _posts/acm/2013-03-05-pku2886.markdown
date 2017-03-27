@@ -1,0 +1,156 @@
+---
+layout: post
+title:   PKU2886(Who Gets the Most Candies?)线段树+反素数
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Who Gets the Most Candies?](http://poj.org/problem?id=2886)
+
+### 题意  
+求一个圆锥的最小体积，要求这个圆锥必须覆盖所有给出的点  
+有n个小孩在玩游戏，每个小孩手上都有一个数字;  
+第k个小孩先出去，然后给出手上的数值x;  
+大于0的话就是从他左边开始数的第x个小孩;  
+否则就是从右边数的第-x个小孩接着出列;  
+直到所有小孩出列;  
+第p个出列的小孩，将拿到f(p)个糖果;  
+f(p)表示p的正因子个数;  
+现在要求得到最多糖果的小孩;  
+
+### 分析    
+对于任何正整数x,其约数的个数记做g(x).例如g(1)=1,g(6)=4;    
+如果某个正整数x满足:对于任意i(0<i<x),都有g(i)<g(x),则称x为反素数;    
+所以反素数满足```f[x]>f[i](1<i<x)```;    
+所以得到的最多糖果数其实就是小于n的最大反素数k;    
+反素数可以直接预处理也可以求;    
+之后用线段树模拟二分搜索找到第k个小孩出列为止;    
+
+### 过程  
+建立线段树，线段树区间表示区间内人的个数;  
+搜索第i个人时所经过的路径区间人数的减一;  
+然后根据提示求得的下一个跳出的人是谁;  
+并记录第i个跳出的人是谁;  
+
+### 代码    
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 2886
+#	   @date		 2013/03/05
+============================================================================**/
+#include<iostream>
+#include<cstring>
+#include<cstdlib>
+#include<cstdio>
+#include<climits>
+#include<algorithm>
+using namespace std;
+
+#define L l,m,u<<1
+#define R m+1,r,u<<1|1  //u*2+1
+
+const int N=500005;
+
+struct node
+{
+    int l,r;
+    int sum;
+}a[N*3];
+
+struct game
+{
+    char name[12];
+    int x;
+}s[N];
+
+int c[N];//第i个人跳出所得糖果
+int num;//得糖果最多的人的输入序号
+int n,k;
+int v,z;//z表示当前已跳出的人数
+int e;//e表示第几个跳出的人得到的糖果最多
+
+void build(int l,int r,int u)//u为根结点
+{
+    a[u].l=l;
+    a[u].r=r;
+    a[u].sum=(r-l+1);
+    if(a[u].l==a[u].r)
+        return;
+    int m=(r+l)>>1;
+    build(L);
+    build(R);
+}
+
+void updata(int u,int t)//t表示目前队列此区间第几个人跳出
+{
+    a[u].sum--;//所到区间人数减一,自上而下沿途更新
+    if(a[u].l==a[u].r)//最后结点
+    {
+        if(e==z)//z是当前已跳出的人数
+        {
+            num=a[u].l;//如果是第e个人跳出 记录答案
+        }
+        if(n-z==0)//全跳出
+            return ;
+        if(s[a[u].l].x>0)//求从线段树左起下一次第几个人跳出
+            v--;
+        v=((v+s[a[u].l].x)%(n-z)+(n-z))%(n-z);//坑爹有没有~
+        if(v==0)//一圈转完了
+            v=n-z;//计算下一个要删除的人是从左算起的第几个人
+    }
+    else
+    {
+        if(a[u*2].sum>=t)//左边人数足够则向左搜
+        {
+            updata(u*2,t);
+        }
+        else
+        {
+            t-=a[u*2].sum;//否则减去左边人数向右搜
+            updata(u*2+1,t);
+        }
+    }
+}
+
+void candy()//求第i人跳出能得到的糖果数量
+{
+    memset(c,0,sizeof(c));
+    for(int i=1; i<N; i++)
+    {
+        c[i]++;
+        for(int j=i*2; j<N; j+=i)
+        {
+            c[j]++;
+        }
+    }
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    candy();
+    while(~scanf("%d %d",&n,&k))
+    {
+        e=1;
+        for(int i=1; i<=n; i++)
+        {
+            getchar();
+            scanf("%s %d",s[i].name,&s[i].x);
+            if(c[i]>c[e])
+                e=i;
+        }
+        build(1,n,1);
+        v=k;//第k个孩子先跳出
+        for(z=1; z<=n; ++z)//z表示当前已跳出的人数
+        {
+            updata(1,v);
+        }
+        printf("%s %d\n",s[num].name,c[e]);
+    }
+    return 0;
+}
+```

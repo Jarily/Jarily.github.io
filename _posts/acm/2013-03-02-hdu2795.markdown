@@ -1,0 +1,87 @@
+---
+layout: post
+title:   HDU2795(Billboard)线段树
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接
+[Billboard](http://acm.hdu.edu.cn/showproblem.php?pid=2795)  
+
+### 题意      
+有一块```h*w```的矩形广告板，要往上面贴广告;  
+然后给n个```1*wi```的广告，要求把广告贴上去;    
+而且要求广告要尽量往上贴并且尽量靠左;    
+求第n个广告的所在的位置，不能贴则为-1;
+  
+### 思想  
+利用线段树可以求区间的最大值;  
+将位置即h用来建树(h<=n,大了没有意义);  
+树中存储的为该位置还拥有的空间;  
+若左子树的最大值大于他,就查询左子树，否则查询右子树;  
+  
+## 代码  
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 2795
+#	   @date		 2013/03/02
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<algorithm>
+using namespace std;
+
+#define L l,m,u<<1
+#define R m+1,r,u<<1|1  //u*2+1
+
+const int N=200000+10;
+int h,w,n;
+int a[N<<2];
+
+void build(int l,int r,int u)//u为根结点
+{
+    a[u]=w;
+    if(l==r)
+        return;
+    int m=(l+r)>>1;
+    build(L);
+    build(R);
+}
+
+int query(int x,int l,int r,int u)
+{
+    if(l==r)
+    {
+        a[u]-=x;
+        return l;
+    }
+    int m=(l+r)>>1;
+    int res=(a[u<<1]>=x)?query(x,L):query(x,R);
+    a[u]=max(a[u<<1],a[u<<1|1]);
+    return res;
+}
+
+int main()
+{
+    freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while (~scanf("%d%d%d",&h,&w,&n))
+    {
+        if(h>n)
+            h=n;
+        build(1,h,1);
+        while(n--)
+        {
+            int x;
+            scanf("%d",&x);
+            if(a[1]<x)
+                printf("-1\n");
+            else
+                printf("%d\n",query(x,1,h,1));
+        }
+    }
+    return 0;
+}
+```

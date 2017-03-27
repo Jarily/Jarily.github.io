@@ -1,0 +1,214 @@
+---
+layout: post
+title:     PKU2985(The k-th Largest Group)线段树+并查集
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Best SMS to Type](http://poj.org/problem?id=2895)
+
+### 题意      
+n只猫，m个操作;  
+0 a b  合并两个猫所在的集合;  
+1 k    询问在当前的所有的集合中含有的猫的个数第k大的为多大;
+
+### 思想    
+合并操作应该用并查集;  
+查询操作可以用线段树;  
+开始将所有的数据输入进来,利用并查集计算出所有种集合的大小;  
+然后根据集合的大小建树查询就可以了;
+
+
+### 代码  
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 2895
+#	   @date		 2013/03/18
+============================================================================**/
+#include<iostream>
+#include<cstring>
+#include<cstdlib>
+#include<cstdio>
+#include<climits>
+#include<algorithm>
+using namespace std;
+
+#define L l,m,u<<1
+#define R m+1,r,u<<1|1
+
+const int N=200010;
+
+struct darling
+{
+    int op;//操作判断
+    int x,y;
+} d[N];//输入数据
+
+struct cat
+{
+    int pre;//前驱结点
+    int rank;//并查集的高度，即猫的数量
+} a[N];
+
+struct Node
+{
+    int l,r,s;
+} t[N*4];//线段树
+
+int vs1[N],vs2[N];//记录每个集合里面猫的数量,即rank
+int flag[N];//记录每个结点的位置,方便线段树插入
+int cnt1,cnt2;//记录集合的数量
+int n,m;
+
+void Build(int l,int r,int u)//建树
+{
+    t[u].l=l;
+    t[u].r=r;
+    t[u].s=0;
+    if(l==r)
+        return;
+    int m=(l+r)>>1;
+    Build(L);
+    Build(R);
+}
+
+void Insert(int x,int n,int u)//插入结点
+{
+    if(t[u].l==t[u].r)
+    {
+        t[u].s+=n;
+        return;
+    }
+    int m=(t[u].l+t[u].r)>>1;
+    if(x<=m)
+        Insert(x,n,u<<1);
+    else
+        Insert(x,n,u<<1|1);
+    t[u].s=t[u<<1].s+t[u<<1|1].s;
+}
+
+int Query(int k,int u)//查询
+{
+    if(t[u].l==t[u].r)
+    {
+        return t[u].l;
+    }
+    if(k>t[u<<1|1].s)
+        return Query(k-t[u<<1|1].s,u<<1);
+    return Query(k,u<<1|1);
+}
+
+void Init(int x)//初始化并查集
+{
+    for(int i=0; i<=x; i++)
+    {
+        a[i].pre=i;
+        a[i].rank=1;
+    }
+}
+
+int Find(int x)//查询前驱结点
+{
+    if(a[x].pre!=x)
+        return a[x].pre=Find(a[x].pre);
+    return a[x].pre;
+}
+
+void Union(int x,int y)//合并操作
+{
+    x=Find(x);
+    y=Find(y);
+    if(x==y)
+        return;
+    if(a[x].rank>a[y].rank)
+    {
+        a[x].rank+=a[y].rank;
+        vs1[++cnt1]=a[x].rank;
+        a[y].pre=x;
+    }
+    else
+    {
+        a[y].rank+=a[x].rank;
+        vs1[++cnt1]=a[y].rank;
+        a[x].pre=y;
+    }
+}
+
+void solve()
+{
+    for(int i=0; i<m; i++)
+    {
+        if(d[i].op)
+        {
+            int v=Query(d[i].x,1);
+            printf("%d\n",vs2[v]);
+        }
+        else
+        {
+            int x1=Find(d[i].x);
+            int y1=Find(d[i].y);
+            if(x1==y1)
+                continue;
+            int x2=a[x1].rank;
+            int y2=a[y1].rank;
+            if(x2==y2)
+            {
+                Insert(flag[x2],-2,1);
+            }
+            else
+            {
+                Insert(flag[x2],-1,1);
+                Insert(flag[y2],-1,1);
+            }
+            Insert(flag[x2+y2],1,1);
+            Union(x1,y1);
+        }
+    }
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(~scanf("%d%d",&n,&m))
+    {
+        Init(n);
+        vs1[1]=1;
+        cnt1=1;
+        for(int i=0; i<m; i++)
+        {
+            scanf("%d",&d[i].op);
+            if(d[i].op)
+            {
+                scanf("%d",&d[i].x);
+            }
+            else
+            {
+                scanf("%d%d",&d[i].x,&d[i].y);
+                Union(d[i].x,d[i].y);
+            }
+        }
+        int cnt2=1;
+        sort(vs1+1,vs1+cnt1+1);
+        for(int i=2; i<=cnt1; i++)//记录多少组不同
+        {
+            if(vs1[i]!=vs1[cnt2])
+                vs1[++cnt2]=vs1[i];
+        }
+        for(int i=1; i<=cnt2; i++)
+        {
+            flag[vs1[i]]=i;
+            vs2[i]=vs1[i];
+        }
+        Build(1,cnt2,1);
+        Insert(1,n,1);
+        Init(n);
+        cnt1=0;
+        solve();
+    }
+    return 0;
+}
+```

@@ -1,0 +1,138 @@
+---
+layout: post
+title:  HDU2612(Find a way)搜索-两次BFS
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Find a way](http://acm.hdu.edu.cn/showproblem.php?pid=2612)
+
+### 题意    
+Y和M要在KFC约会,地图上有多个KFC,求在哪个KFC两人所走总距离最短;
+
+### 思想  
+两个人到同一点的和最短,分别以两个人为起点,BFS遍历整个图;  
+计算出到每个KFC的最短距离,然后枚举所有的KFC,求出最小的代价即可;
+
+### 代码  
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 2612
+#	   @date		 2013/04/13
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<queue>
+#include<algorithm>
+using namespace std;
+
+const int N=205;
+const int MAX=0xffffff;
+
+int x1,y1,x2,y2;//两个人的起点
+int v1[N][N];//计算路程和标记是否访问
+int v2[N][N];//计算路程和标记是否访问
+char map[N][N];//地图
+
+int dir[4][2];//初始化为{1,0},{-1,0},{0,1},{0,-1}          
+
+int n,m;
+
+struct node//坐标集
+{
+    int x;
+    int y;
+};
+
+void BFS(int x ,int y,int v[][N])
+{
+    queue<node>Q;
+    node p;
+    p.x=x;
+    p.y=y;
+    Q.push(p);
+    v[x][y]=0;
+    while(!Q.empty())
+    {
+        node p1=Q.front();
+        Q.pop();
+        for(int i=0; i<4; i++)
+        {
+            node p2;
+            p2.x=p1.x+dir[i][0];
+            p2.y=p1.y+dir[i][1];
+            if(v[p2.x][p2.y]==MAX&&p2.x>=0&&p2.x<n&&p2.y>=0&&p2.y<m&&map[p2.x][p2.y]!='#')
+            {
+                v[p2.x][p2.y]=v[p1.x][p1.y]+11;
+                Q.push(p2);
+            }
+        }
+    }
+}
+
+void Solve()
+{
+    for(int i=0; i<n; i++)
+    {
+        for(int j=0; j<m; j++)
+        {
+            v1[i][j]=v2[i][j]=MAX;
+        }
+    }
+
+    BFS(x1,y1,v1);
+    BFS(x2,y2,v2);
+
+    int Min=MAX;
+    for(int i=0; i<n; i++)
+    {
+        for(int j=0; j<m; j++)
+        {
+            if(map[i][j]=='@'&&v1[i][j]!=MAX&&v2[i][j]!=MAX)//枚举所有的KFC
+            {
+                if(Min>v1[i][j]+v2[i][j])
+                    Min=v1[i][j]+v2[i][j];
+            }
+        }
+    }
+    printf("%d\n",Min);
+}
+
+int main()
+{
+    freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(~scanf("%d%d",&n,&m))
+    {
+        char ch;
+        for(int i=0; i<n; i++)
+        {
+            for(int j=0; j<m; j++)
+            {
+                scanf(" %c",&ch);
+                map[i][j]=ch;
+                if(ch=='Y')
+                {
+                    x1=i;
+                    y1=j;
+                }
+                if(ch=='M')
+                {
+                    x2=i;
+                    y2=j;
+                }
+            }
+        }
+        Solve();
+    }
+    return 0;
+}
+
+
+
+```

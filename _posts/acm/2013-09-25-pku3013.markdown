@@ -1,0 +1,152 @@
+---
+layout: post
+title: PKU3013(Big Christmas Tree)-最短路径-SPFA
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Big Christmas Tree](http://poj.org/problem?id=3013)
+
+### 题意           
+给定v个点的重量,并给定e条边,每条边具有一个权值;  
+在e条边中选v-1条边使这v个点成为一棵树;  
+定义这棵树的代价为(每棵子树节点重量和其子树根到父节点的边的权值的乘积)之和;  
+求以1为根节点的树的最小代价;
+
+### 分析        
+每个点的价值为该点到达根结点所需经过的边权之和乘以该结点重量;  
+即要让到达每个结点经过的边的单位价格之和最小;  
+即可转化为最短路问题;  
+做的时候WA了很多次,需要考虑各种细节问题;  
+精度问题,用long long;  
+没答案时输出“No Answer”,当n为0或1是输出为0;  
+最大值INF取值过小或者过大,过小可能小于里面的权值,过大相加时有可能会溢出,妈的;
+
+### 代码
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 3013
+#	   @date		 2013/09/25
+============================================================================**/
+#include<iostream>
+#include<cstring>
+#include<cstdlib>
+#include<queue>
+#include<cstdio>
+#include<climits>
+#include<algorithm>
+using namespace std;
+
+typedef long long LL;
+
+const long long INF=0xffffffffff;
+const int N=50010;
+const int M=100010;
+
+struct node
+{
+    int to;
+    int w;
+    int next;
+};
+
+node edge[M];
+int head[M];
+int idx;
+LL dist[N];
+int value[N];
+int n,m;
+
+void Addedge(int u,int v,int w)
+{
+    edge[idx].w=w;
+    edge[idx].to=v;
+    edge[idx].next=head[u];
+    head[u]=idx++;
+}
+
+LL SPFA(int s)
+{
+    queue<int>Q1;
+    int inq[N];
+    for(int i=0; i<=n; i++)
+    {
+        dist[i]=INF;
+        inq[i]=0;
+    }
+    dist[s]=0;
+    Q1.push(s);
+    inq[s]++;
+    while(!Q1.empty())
+    {
+        int q=Q1.front();
+        Q1.pop();
+        inq[q]--;
+        if(inq[q]>n)//负权环
+            return -1;
+        int k=head[q];
+        while(k>=0)
+        {
+            if(dist[edge[k].to]>dist[q]+edge[k].w)
+            {
+                dist[edge[k].to]=edge[k].w+dist[q];
+                if(!inq[edge[k].to])
+                {
+                    inq[edge[k].to]++;
+                    Q1.push(edge[k].to);
+                }
+            }
+            k=edge[k].next;
+        }
+    }
+
+    LL res=0;
+    for(int i=1; i<=n; i++)
+    {
+        if(dist[i]==INF)
+        return -1;
+        // cout<<"dist[i]=="<<dist[i]<<endl;
+        res+=value[i]*dist[i];
+    }
+    return res;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int tcase;
+    scanf("%d",&tcase);
+    while(tcase--)
+    {
+        scanf("%d%d",&n,&m);
+        memset(head, -1, sizeof(head));
+        memset(value, 0, sizeof(value));
+        idx=0;
+        for(int i=1; i<=n; i++)
+            scanf("%d",&value[i]);
+        int u,v,w;
+        for(int i=0; i<m; i++)
+        {
+            scanf("%d%d%d",&u,&v,&w);
+            Addedge(u,v,w);
+            Addedge(v,u,w);
+        }
+        if(n==0||m==0)
+        {
+            printf("0\n");
+            continue;
+        }
+        LL res=SPFA(1);
+        if(res==-1)
+            printf("No Answer\n");
+        else
+            printf("%lld\n",res);
+    }
+    return 0;
+}
+
+```

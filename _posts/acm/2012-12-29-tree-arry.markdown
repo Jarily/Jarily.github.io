@@ -1,0 +1,232 @@
+---
+layout: post
+title:  树状数组算法分析
+author: "R. Liao" 
+categories: acm
+tags: 树状数组
+---
+
+### 模型  
+树状数组有一维树状数组和二维树状数组；  
+主要的问题模型为已知数组a[n],下标从1开始,更改a中的元素,要求得新的a数组中i到j区间内的和；  
+树状数组中S[k]存储的是从k开始向前数k的二进制表示中右边第一个1所代表的数字个元素的和；  
+即令lowbit为k的二进制表示中右边第一个1所代表的数字；  
+然后S[k]里存的就是从a[k]开始向前数lowbit个元素之和；  
+
+```
+S1 = A1
+
+S2 = A1 + A2
+
+S3 = A3
+
+S4 = A1 + A2 + A3 + A4
+
+S5 = A5
+
+S6 = A5 + A6
+
+S7 = A7
+
+S8 = A1 + A2 + A3 + A4 + A5 + A6 + A7 + A8
+```
+
+### 时间复杂度分析  
+
+#### 修改元素  
+对于修改元素来说,如果第i个元素被修改了,可以直接在S数组里面进行相应的更改；  
+例如更改的元素是a[2],那么它影响到得c数组中的元素只有S[2],S[4],S[8]；  
+只需一层一层往上修改就可以了,这个过程的最坏的复杂度也不过O(logN);  
+
+#### 查询元素  
+对于查找来说,如查找sum[k],只需查找k的二进制表示中1的个数次就能得到最终结果；  
+例如查找sum[7],7的二进制表示中有3个1,也就是要查找3次,即sum[7]=S[7]+S[6]+S[4]；  
+
+#### 实现过程  
+以7为例,二进制为0111；  
+从右边的第一个1开始；  
+右边第一个1存在的时候,为7，二进制为0111即S[7];  
+然后将这个1舍掉,得到6,二进制表示为0110,即S[6];  
+然后舍掉用过的1,得到4,二进制表示为0100,即S[4]；  
+即sum[7]=S[7]+S[6]+S[4]；
+
+### 实现代码  
+```
+#include<iostream>
+#include<cstdio>
+#include<cmath>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+
+const int MAX=50000;
+
+class Binary_Indexed_Tree
+{
+public:
+    int **s;
+    int type;
+public:
+    Binary_Indexed_Tree(int t);
+    ~Binary_Indexed_Tree();
+    void clear();
+    int lowbit(int x)
+    {
+        return x&(-x);
+    };
+    void modify(int x, int value);
+    void modify(int x, int y, int value);
+    int sum(int x);
+    int sum(int x, int y);
+};
+
+Binary_Indexed_Tree::Binary_Indexed_Tree(int t):type(t)
+{
+    int i;
+    s = new int*[MAX+1];
+    //一维树状数组
+    if(type == 1)
+    {
+        for(i = 0; i <= MAX; i++)
+            s[i] = new int;
+    }
+    //二维树状数组
+    else if(type == 2)
+    {
+        for(i = 0; i <= MAX; i++)
+            s[i] = new int[MAX+1];
+    }
+}
+
+Binary_Indexed_Tree::~Binary_Indexed_Tree()
+{
+    int i;
+    for(i = 0; i <= MAX; i++)
+        delete []s[i];
+    delete []s;
+}
+
+void Binary_Indexed_Tree::clear()
+{
+    int i, j;
+    for(i = 0; i <= MAX; i++)
+    {
+        if(type == 1)
+            s[i][0] = 0;
+        else
+        {
+            for(j = 0; j <= MAX; j++)
+                s[i][j] = 0;
+        }
+    }
+}
+
+void Binary_Indexed_Tree::modify(int x, int value)
+{
+    while(x <= MAX)
+    {
+        s[x][0] += value;
+        x += lowbit(x);
+    }
+}
+
+void Binary_Indexed_Tree::modify(int x,int y,int value)
+{
+    int temp = y;
+    while(x <= MAX)
+    {
+        y = temp;
+        while(y <= MAX)
+        {
+            s[x][y] += value;
+            y = y + lowbit(y);
+        }
+        x = x + lowbit(x);
+    }
+}
+
+int Binary_Indexed_Tree::sum(int x)
+{
+    int ans=0;
+    while(x > 0)
+    {
+        ans += s[x][0];
+        x -= lowbit(x);
+    }
+    return ans;
+}
+
+int Binary_Indexed_Tree::sum(int x,int y)
+{
+    int ans=0, temp = y;
+    while(x > 0)
+    {
+        y = temp;
+        while(y > 0)
+        {
+            ans += s[x][y];
+            y = y - lowbit(y);
+        }
+        x = x - lowbit(x);
+    }
+    return ans;
+}
+```
+
+### 举例应用-HDU1541
+
+#### 链接
+[Stars](http://acm.hdu.edu.cn/showproblem.php?pid=1541)  
+
+#### 题意  
+求一颗星星的左下方有多少颗星星  
+
+#### 代码
+```
+int com[MAX], res[MAX], N;
+
+int lowbit(int x)
+{
+    return x&(-x);
+}
+
+void modify ( int pos, int val )
+{
+     while ( pos <= MAX )
+     {
+            com[pos] += val;
+            pos += lowbit(pos);
+     }
+}
+
+int quy ( int x )
+{
+    int sum = 0;
+    while ( x > 0 )
+    {
+           sum += com[x];
+           x -= lowbit(x);
+    }
+    return sum;
+}
+
+int main ()
+{
+    int x;
+    while ( scanf ( "%d",&N ) != EOF )
+    {
+            memset ( com,0,sizeof (com) );
+            memset ( res,0,sizeof (res) );
+            for ( int i = 1; i <= N; ++ i )
+            {
+                  scanf ( "%d%*d", &x );
+                  x++;
+                  res[ quy(x) ] ++;
+                  modify ( x,1 );
+            }
+            for ( int i = 0; i < N; ++ i )
+                  printf ( "%d\n",res[i] );
+    }
+    return 0;
+}
+```

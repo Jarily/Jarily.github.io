@@ -1,0 +1,240 @@
+---
+layout: post
+title:   数据结构-SBT(Size Balanced Tree)
+author: "R. Liao" 
+categories: acm
+tags: SBT
+---
+
+### 数据结构  
+SBT(Size Balanced Tree),又称傻逼树;  
+
+### 数据域  
+值域key,左孩子left,右孩子right,保持平衡的size;  
+  
+### 性质  
+每棵子树的大小不小于其兄弟的子树大小;
+  
+### 插入  
+插入算法先简单插入节点，然后调用一个维护过程以保持性质;  
+
+### 删除  
+删除操作与普通维护size域的二叉查找树相同;  
+
+### 最大值和最小值  
+由于SBT本身已经维护了size域;  
+所以只需用Select(T,1)来求最大值;  
+Select(T,T.size)求最小值;  
+其中Select(T,k)函数返回树T在第k位置上的节点值;  
+
+### 代码实现  
+
+```
+#include<iostream>
+#include<cstring>
+#include<cstdlib>
+#include<cstdio>
+#include<climits>
+#include<algorithm>
+using namespace std;
+
+const int N = 100000;
+int key[N], lefts[N], rights[N], size[N];
+int u;//根结点
+int node;
+
+inline void Left_Rotate(int &x)
+{
+    int k = rights[x];
+    rights[x] = lefts[k];
+    lefts[k] = x;
+    size[k] = size[x];
+    size[x] = size[lefts[x]] + size[rights[x]] + 1;
+    x = k;
+}
+
+inline void Right_Rotate(int &y)
+{
+    int k = lefts[y];
+    lefts[y] = rights[k];
+    rights[k] = y;
+    size[k] = size[y];
+    size[y] = size[lefts[y]] + size[rights[y]] + 1;
+    y = k;
+}
+
+void Maintain(int &u, bool flag)//维护
+{
+    if(flag == false)
+    {
+        if(size[lefts[lefts[u]]] > size[rights[u]])
+            Right_Rotate(u);
+        else
+        {
+            if(size[rights[lefts[u]]] > size[rights[u]])
+            {
+                Left_Rotate(lefts[u]);
+                Right_Rotate(u);
+            }
+            else return;
+        }
+    }
+    else
+    {
+        if(size[rights[rights[u]]] > size[lefts[u]])
+            Left_Rotate(u);
+        else
+        {
+            if(size[lefts[rights[u]]] > size[lefts[u]])
+            {
+                Right_Rotate(rights[u]);
+                Left_Rotate(u);
+            }
+            else return;
+        }
+    }
+    Maintain(lefts[u], false);
+    Maintain(rights[u], true);
+    Maintain(u, true);
+    Maintain(u, false);
+}
+
+void Insert(int &u, int v)//插入结点
+{
+    if(u == 0)
+    {
+        key[u = ++node] = v;
+        size[u] = 1;
+    }
+    else
+    {
+        size[u]++;
+        if(v < key[u])
+            Insert(lefts[u], v);
+        else
+            Insert(rights[u], v);
+        Maintain(u, v >= key[u]);
+    }
+}
+
+int Delete(int &u, int v)//删除结点
+{
+    size[u]--;
+    if( (v == key[u]) || (v < key[u] && lefts[u] == 0) || (v > key[u] && rights[u] == 0) )
+    {
+        int r = key[u];
+        if(lefts[u] == 0 || rights[u] == 0)
+            u = lefts[u] + rights[u];
+        else
+            key[u] = Delete(lefts[u], key[u] + 1);
+        return r;
+    }
+    else
+    {
+        if(v < key[u])
+            return Delete(lefts[u], v);
+        else
+            return Delete(rights[u], v);
+    }
+}
+
+int Search(int x, int k)//查询
+{
+    if(x == 0 || k == key[x])
+        return x;
+    if(k < key[x])
+        return Search(lefts[x], k);
+    else
+        return Search(rights[x], k);
+}
+
+int Select(int u, int k)//返回树在第k位置上的结点值
+{
+    int r = size[lefts[u]] + 1;
+    if(k == r)
+        return key[u];
+    else if(k < r)
+        return Select(lefts[u], k);
+    else
+        return Select(rights[u], k - r);
+}
+
+int Successor(int u, int k)//查询结点k的后继
+{
+    if(u == 0)
+        return k;
+    if(key[u] <= k)
+        return Successor(rights[u], k);
+    else
+    {
+        int r = Successor(lefts[u], k);
+        if(r == k)
+            return key[u];
+        else
+            return r;
+    }
+}
+
+int Predecessor(int u, int k)//查询结点k的前驱
+{
+    if(u == 0)
+        return k;
+    if(key[u] >= k)
+        return Predecessor(lefts[u], k);
+    else
+    {
+        int r = Predecessor(rights[u], k);
+        if(r == k)
+            return key[u];
+        else
+            return r;
+    }
+}
+
+int Rank(int u, int k)//排名(rank),也叫秩,求整棵树中从大到小排序的第k位元素;
+{
+    if(u==0)
+        return 1;
+    if(key[u] >= k)
+        return Rank(lefts[u], k);
+    else
+        return size[lefts[u]] + Rank(rights[u], k) + 1;
+}
+
+int main()
+{
+    freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int n;
+    scanf("%d",&n);
+    for(int i=0; i<n; i++)
+    {
+        int cmd,x;
+        scanf("%d%d",&cmd,&x);
+        switch(cmd)
+        {
+        case 1:
+            Insert(u,x);
+            break;
+        case 2:
+            Delete(u,x);
+            break;
+        case 3:
+            printf("%d\n", Search(u,x));
+            break;
+        case 4:
+            printf("%d\n", Rank(u,x));
+            break;
+        case 5:
+            printf("%d\n", Select(u,x));
+            break;
+        case 6:
+            printf("%d\n", Predecessor(u,x));
+            break;
+        case 7:
+            printf("%d\n", Successor(u,x));
+            break;
+        }
+    }
+    return 0;
+}
+```

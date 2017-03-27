@@ -1,0 +1,106 @@
+---
+layout: post
+title:   WHU1463(Come to a spring outing)背包问题-DP
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Come to a spring outing](http://acm.whu.edu.cn/land/problem/detail?problem_id=1463)
+
+### 题意         
+有三个一样的背包,每个背包都能装体积为m的物品;  
+有n个不可拆卸的物品,求三个背包能否装完这n个物品;
+
+### 分析      
+DP背包问题;  
+dp[i][j][k][l]表示前i个物品,第一个背包装了j,第二个背包装了k,第三个背包装了l;  
+状态转移方程为：  
+**dp[j][k][l]=dp[i-1][j-v[i]][k][l]|dp[i-1][j][k-v[i]][l]|dp[i-1][j][k][l-v[i]]**;  
+这样做时间和空间复杂度显然无法承受;  
+分析可得如果已知i和j背包的容量,那么l背包的容量为l=sum(v[1~i])-j-k;  
+这样就可以把一个三维DP转化为二维DP;  
+即此时的状态转移方程为：  
+**dp[i][j][k]=dp[i-1][j-v[i]][k]|dp[i-1][j][k-v[i]]|dp[i-1][j][k]**;
+
+### 代码    
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 WHOJ 1463
+#	   @date		 2013/04/15
+============================================================================**/
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+using namespace std;
+
+const int N=33;
+const int M=404;
+
+int dp[M][M];
+
+int v[N];
+
+int n,m,sum;
+
+int solve()
+{
+    for(int i=0; i<n; i++)
+    {
+        for(int j=m; j>=0; j--)
+        {
+            for(int k=m; k>=0; k--)
+            {
+                if(j>=v[i]&&dp[j-v[i]][k]+v[i]>dp[j][k])
+                {
+                    dp[j][k]=dp[j-v[i]][k]+v[i];
+                }
+                if(k>=v[i]&&dp[j][k-v[i]]+v[i]>dp[j][k])
+                {
+                    dp[j][k]=dp[j][k-v[i]]+v[i];
+                }
+                if(sum-dp[j][k]<=m)
+                    return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int t1,t2=0;
+    scanf("%d",&t1);
+    while(t1--)
+    {
+        t2++;
+        scanf("%d%d",&n,&m);
+        sum=0;
+        bool flag=1;
+        for(int i=0; i<n; ++i)
+        {
+            scanf("%d",v+i);
+            sum+=v[i];
+            if(v[i]>m)
+                flag=0;
+        }
+        for(int i=0; i<=m; i++)
+            for(int j=0; j<=m; j++)
+            {
+                dp[i][j]=0;
+            }
+        printf("Case %d: ",t2);
+        if(flag&&solve())
+            puts("Yes");
+        else
+            puts("No");
+    }
+    return 0;
+}
+
+
+```

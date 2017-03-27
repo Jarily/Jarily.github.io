@@ -1,0 +1,143 @@
+---
+layout: post
+title:   PKU1511(Invitation Cards)最短路径-邻接表+SPFA算法
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Invitation Cards](http://poj.org/problem?id=1511)
+
+### 题意         
+弱菜英语又是渣渣,题意是对着测试数据连猜带蒙出来的;  
+在一个有向图中,要求顶点1到其他的所有顶点往返的总共的最小花费;  
+另外给出的数据量略大,顶点数和边数都是1000000的范围;
+
+### 分析      
+这是一个最短路径问题;  
+由于数据范围很大,用邻接矩阵和dijkstra很可能超时超内存,所以采用邻接表建图;  
+在这个单向图中,求的是从第一个顶点到其他所有顶点的最短路径和其他所有顶点到第一个顶点的最短路径;  
+所以用两个邻接表分别寸正向图和反向图;  
+然后两次运用SPFA算法求以顶点1为起点的最短路径;  
+他们的和就是所求的最小花费;
+
+### 代码    
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 1511
+#	   @date		 2013/04/13
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<queue>
+#include<algorithm>
+using namespace std;
+
+const int N=1000005;
+const int INF=1000000000;
+
+typedef long long LL;
+
+struct edge
+{
+    int to;
+    int w;
+    int next;
+};
+
+edge G[2][N];//正向图,反向图
+int head[2][N];
+
+int inq[N];//每个顶点是否在队列中的标志
+int n,m;
+LL dist[N];
+LL ans;
+
+void Addedge(int u,int v,int w,int idx)
+{
+    G[0][idx].w=w;
+    G[0][idx].to=v;
+    G[0][idx].next=head[0][u];
+    head[0][u]=idx;
+
+    G[1][idx].w=w;
+    G[1][idx].to=u;
+    G[1][idx].next=head[1][v];
+    head[1][v]=idx;
+}
+
+queue<int>Q;
+
+void SPFA(int flag)
+{
+    int v=1;//v为起点
+    for(int i=1; i<=n; i++)
+    {
+        dist[i]=INF;
+        inq[i]=0;
+    }
+    dist[v]=0;
+    inq[v]=1;
+    Q.push(v);
+    int temp;
+    while(!Q.empty())
+    {
+        int u=Q.front();
+        Q.pop();
+        inq[u]=0;
+        temp=head[flag][u];
+        int x,y;
+        while(temp!=-1)
+        {
+            x=G[flag][temp].to;
+            if(dist[x]>dist[u]+G[flag][temp].w)//松弛
+            {
+                dist[x]=dist[u]+G[flag][temp].w;
+                if(!inq[x])
+                {
+                    Q.push(x);
+                    inq[x]=1;
+                }
+            }
+            temp=G[flag][temp].next;
+        }
+    }
+    for(int i=1; i<=n; i++)
+    {
+        // printf("dist[%d]==%d\n",i,dist[i]);
+        ans+=dist[i];
+    }
+}
+
+int main()
+{
+    // freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int t;
+    scanf("%d",&t);
+    while(t--)
+    {
+        memset(G,0,sizeof(G));
+        memset(head,-1,sizeof(head));
+        scanf("%d%d",&n,&m);
+        int u,v,w;
+        for(int i=0; i<m; i++)
+        {
+            scanf("%d%d%d",&u,&v,&w);
+            Addedge(u,v,w,i);
+        }
+        ans=0;
+        SPFA(0);//正向
+        SPFA(1);//反向
+        printf("%lld\n",ans);
+    }
+    return 0;
+}
+
+
+
+```

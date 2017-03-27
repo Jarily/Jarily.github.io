@@ -1,0 +1,113 @@
+---
+layout: post
+title: UVA10766(Organising the Organisation)生成树计数-Matrix-Tree定理
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Organising the Organisation](http://uva.onlinejudge.org/index.php?option=com_onlinejudge&Itemid=8&page=show_problem&problem=1707)
+
+### 题意         
+Jimmy在公司里负责人员的分级工作,他最近遇到了一点小麻烦;  
+为了提高公司工作的效率,董事会决定对所有的员工重新分级;  
+即除了一个总经理例外,其他所有的员工有且只有一个直接领导;  
+由于员工直接的人际关系,可能出现a和b都不愿意让对方成为自己直接领导的情况;  
+公司里的n位员工1~n编号,并且董事会已经决定让标号为k的员工担任总经理;  
+Jimmy的任务就是一共有多少种不同的员工分级方案;
+
+### 分析        
+如果a和b直接没有矛盾,就在他们之间连一条边;  
+则最后得到的员工之间的关系图就是原图的一颗生成树;  
+虽然规定了生成树的根,但是因为无向图生成树的个数与根无关;  
+所以只需要直接利用[Matrix-Tree定理](http://jarily.com/matrix-tree/)计算原图的生成树的个数即可;
+
+ * Matrix-Tree定理  
+ G的所有不同的生成树的个数等于其Kirchhoff矩阵C[G]任何一个n-1阶主子式的行列式的绝对值；  
+ n-1阶主子式就是对于r(1≤r≤n),将C[G]的第r行,第r列同时去掉后得到的新矩阵,用Cr[G]表示;
+
+### 代码    
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 UVA 10766
+#	   @date		 2013/05/08
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<cmath>
+#include<algorithm>
+using namespace std;
+
+const int N=55;
+
+typedef long long LL;
+
+int D[N][N];
+LL C[N][N];//Kirchhoff矩阵
+
+LL Det(LL a[][N],int n)//生成树计数:Matrix-Tree定理
+{
+    LL ret=1;
+    for(int i=1; i<n; i++)
+    {
+        for(int j=i+1; j<n; j++)
+            while(a[j][i])
+            {
+                LL t=a[i][i]/a[j][i];
+                for(int k=i; k<n; k++)
+                    a[i][k]=(a[i][k]-a[j][k]*t);
+                for(int k=i; k<n; k++)
+                    swap(a[i][k],a[j][k]);
+                ret=-ret;
+            }
+        if(a[i][i]==0)
+            return 0;
+        ret=ret*a[i][i];
+    }
+    if(ret<0)
+        ret=-ret;
+    return ret;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int n,m,k;
+    while(~scanf("%d%d%d",&n,&m,&k))
+    {
+        memset(C,0,sizeof(C));
+        memset(D,0,sizeof(D));
+        int u,v;
+        while(m--)
+        {
+            scanf("%d%d",&u,&v);
+            u--;
+            v--;
+            D[u][v]=D[v][u]=1;
+        }
+        for(int i=0; i<n; i++)
+        {
+            int u=0;
+            for(int j=0; j<n; j++)
+            {
+                if(i!=j&&!D[i][j])
+                {
+                    u++;
+                    C[i][j]=-1;
+                }
+
+            }
+            C[i][i]=u;
+        }
+        LL res=Det(C,n);
+        printf("%lld\n",res);
+    }
+    return 0;
+}
+
+
+```

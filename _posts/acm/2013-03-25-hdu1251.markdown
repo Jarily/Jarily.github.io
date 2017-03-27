@@ -1,0 +1,134 @@
+---
+layout: post
+title:  HDU1251(统计难题)统计以某个字符串为前缀的单词数量(Trie树)
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[统计难题](http://acm.hdu.edu.cn/showproblem.php?pid=1251)
+
+### 题意    
+给出很多单词,统计出以某个字符串为前缀的单词数量(单词本身也是自己的前缀);
+
+### 思想  
+字典树模版题;
+
+### 代码
+  
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 1251
+#	   @date		 2013/03/25
+============================================================================**/
+#include<iostream>
+#include<cstring>
+#include<cstdlib>
+#include<cstdio>
+#include<climits>
+#include<algorithm>
+using namespace std;
+
+const int MAX=26;
+const int N=12;
+
+struct Trie //Trie结点声明
+{
+    bool isStr;//标记该结点处是否构成一个串
+    int prefix;//统计前缀
+    Trie *next[MAX];//一个指针数组，存放着指向各个儿子节点的指针
+};
+
+void insert(Trie *root,const char *s) //将单词s插入到字典树中
+{
+    if(root==NULL||*s=='\0')
+        return;
+    Trie *p=root;
+    while(*s)
+    {
+        if(p->next[*s-'a']==NULL)//如果不存在存储该字符的节点，则建立结点
+        {
+            Trie *temp=new Trie;
+            for(int i=0; i<MAX; i++)
+            {
+                temp->next[i]=NULL;
+            }
+            temp->isStr=false;
+            temp->prefix=0;
+            p->next[*s-'a']=temp;
+            p=p->next[*s-'a'];
+        }
+        else
+        {
+            p=p->next[*s-'a'];
+        }
+        p->prefix++;
+        s++;//让指针s指向下一个字符
+    }
+    p->isStr=true;//单词结束的地方标记此处可以构成一个串
+}
+
+int search(Trie *root,const char *s)//查找某个单词s是否已经存在
+{
+    Trie *p=root;
+    while(p&&*s)
+    {
+        p=p->next[*s-'a'];
+        s++;
+    }
+    return (p&&p->isStr);  //在单词结束处的标记为true时，单词才存在
+}
+
+void del(Trie *root)//释放整个字典树占的堆区空间
+{
+    for(int i=0; i<MAX; i++)
+    {
+        if(root->next[i]!=NULL)
+        {
+            del(root->next[i]);
+        }
+    }
+    delete root;
+}
+
+int solve(Trie *root,const char *s)//统计前缀
+{
+    Trie *p=root;
+    while(p&&*s)
+    {
+        if(p->next[*s-'a']==NULL)
+        {
+            return 0;
+        }
+        p=p->next[*s-'a'];
+        s++;
+    }
+    return p->prefix;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    char s[N];
+    Trie *root = new Trie;
+    for(int i=0; i<MAX; i++)
+    {
+        root->next[i]=NULL;
+    }
+    root->isStr=false;
+    root->prefix=0;
+    while(gets(s),strcmp(s,""))
+    {
+        insert(root,s);     //先建立字典树
+    }
+    while(gets(s))
+    {
+        printf("%d\n", solve(root,s));
+    }
+    del(root); //释放空间很重要
+    return 0;
+}
+
+```

@@ -1,0 +1,111 @@
+---
+layout: post
+title:  HDU2476(String painter)DP
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接
+[String painter](http://acm.hdu.edu.cn/showproblem.php?pid=2476)
+
+### 题意  
+给出两个字符串a,b，将a串变为b串;  
+每次可以将某一个连续区间变成同一个字符，问最少需要操作多少次；
+
+### 算法
+* **动态规划(DP)**  
+**第一步**    
+设dp[i][j]表示从i到j至少要改变多少次；  
+则状态转移方程为：  
+```dp[i][j]=min(dp[i+1][j]+(b[i]==b[j]?0:1),dp[i+1][k]+dp[k+1][j](b[i]==b[k]))```   
+**第二步**　  
+设res[i]表示使长度为i的字符串a到长度为i的字符串b的最小操作的次数；　　  
+则有　　  
+```res[i]=min(res[j]+dp[j+1][i],dp[0][i],res[i-1](a[i]==b[i]))```
+
+### 代码
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 2476
+#	   @date		 2012/12/20
+============================================================================**/
+
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+using namespace std;
+
+const int N=200;
+char a[N],b[N];
+int dp[N][N],res[N];
+
+void solve(int i,int j)
+{
+    if(dp[i][j]>=0)
+        return;
+    solve(i+1,j);
+    dp[i][j]=dp[i+1][j]+(b[i]==b[j]?0:1);
+    for(int k=i+1; k<=j-1; k++)
+        if(b[i]==b[k])
+        {
+            solve(i+1,k);
+            solve(k+1,j);
+            if(dp[i+1][k]+dp[k+1][j]<dp[i][j]||dp[i][j]==-1)
+                dp[i][j]=dp[i+1][k]+dp[k+1][j];
+        }
+}
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(cin>>a>>b)
+    {
+        int n=strlen(a);
+        for(int i=0; i<n; i++)
+        {
+            res[i]=-1;
+            for(int j=i; j<n; j++)
+            {
+                if(i==j)
+                    dp[i][j]=1;
+                else
+                    dp[i][j]=-1;
+            }
+
+        }
+
+        for(int i=0; i<n; i++)
+        {
+            for(int j=i; j<n; j++)
+            {
+                if(dp[i][j]==-1)
+                    solve(i,j);
+            }
+        }
+
+        if(a[0]==b[0])
+            res[0]=0;
+        else
+            res[0]=1;
+
+        for(int i=1; i<n; i++)
+        {
+            res[i]=dp[0][i];
+            if(a[i]==b[i])
+                res[i]=res[i-1];
+            else
+            {
+                for(int j=0; j<=i-1; j++)
+                {
+                    if(res[j]+dp[j+1][i]<res[i])
+                        res[i]=res[j]+dp[j+1][i];
+                }
+            }
+        }
+
+        cout<<res[n-1]<<endl;
+    }
+    return 0;
+}
+```

@@ -1,0 +1,141 @@
+---
+layout: post
+title: HDU4612(Warm up)2013多校2-图的边双连通问题(Tarjan算法+树形DP)
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Warm up](http://acm.hdu.edu.cn/showproblem.php?pid=4612)
+
+### 题意    
+给你一个无向连通图,问加上一条边后得到的图的最少的割边数;
+
+### 分析  
+图的边双连通Tarjan算法+树形DP;
+即通过Tarjan算法对边双连通缩图,构成一棵树,然后用树形DP求最长链,连接首尾即可;剩下的连通块即为所求答案;
+
+### 思路  
+对图深度优先搜索,定义DFN(u)为u在搜索树中被遍历到的次序号;  
+定义Low(u)为u或u的子树中能通过非父子边追溯到的最早的节点,即DFN序号最小的节点;  
+则有：
+
+```
+Low(u)=Min
+{
+    DFN(u),
+    Low(v),(u,v)为树枝边，u为v的父节点
+    DFN(v),(u,v)为指向栈中节点的后向边(非横叉边)
+}
+```  
+
+* 一个顶点u是割点,当且仅当满足(1)或(2)  
+(1)u为树根,且u有多于一个子树;  
+(2)u不为树根,且满足存在(u,v)为树枝边(或称父子边,即u为v在搜索树中的父亲),使得DFN(u)<=Low(v);  
+
+* 一条无向边(u,v)是桥,当且仅当(u,v)为树枝边且满足DFN(u)<Low(v);
+
+### 代码  
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 4612
+#	   @date		 2013/07/29
+============================================================================**/
+#pragma comment(linker,"/STACK:102400000,102400000")
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<map>
+#include<stack>
+using namespace std;
+
+const int N=200010;
+const int M=1000010;
+
+struct node
+{
+    int v;
+    int next;
+} e[M*2];
+
+int head[N];
+int dfn[N],low[N],dp[N][2];//dp[i][0]表示第i个节点的子树中最长的链，dp[i][1]表示第i个节点的子树中第二长的链
+bool visit[M];
+int n,m,cnt,res;
+
+void AddEdge(int u,int v)
+{
+    e[cnt].v=v;
+    e[cnt].next=head[u];
+    head[u]=cnt++;
+}
+
+void Tarjan(int u)
+{
+    dfn[u]=low[u]=cnt++;
+    dp[u][0]=dp[u][1]=0;
+    for(int i=head[u]; i!=-1; i=e[i].next)
+    {
+        int j=e[i].v;
+        if(!visit[i>>1])
+        {
+            visit[i>>1]=true;
+            if(dfn[j]==0)//跟强连通一样
+            {
+                Tarjan(j);
+                res+=dfn[u]<low[j];//统计连通块，比实际数目少一个，就是回溯的时候的最后一个
+                int temp=dp[j][0]+(dfn[u]<low[j]);
+                if(temp>dp[u][0])
+                {
+                    dp[u][1]=dp[u][0];
+                    dp[u][0]=temp;
+                }
+                else if(temp>dp[u][1])
+                {
+                    dp[u][1]=temp;
+                }
+                low[u]=min(low[u],low[j]);
+            }
+            else
+                low[u]=min(low[u],dfn[j]);
+        }
+    }
+}
+
+int main()
+{
+	#ifndef ONLINE_JUDGE
+    freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    #endif
+    while(scanf("%d%d",&n,&m)&&n+m)
+    {
+        cnt=0;
+        res=0;
+        memset(dfn,0,sizeof(dfn));
+        memset(low,0,sizeof(low));
+        memset(head,-1,sizeof(head));
+        for(int i=0; i<m; i++)
+        {
+        	int u,v;
+            scanf("%d%d",&u,&v);
+            AddEdge(u,v);
+            AddEdge(v,u);
+        }
+        cnt=1;
+        memset(visit,0,sizeof(visit));
+        Tarjan(1);
+        int temp=0;
+        for(int i=1; i<=n; i++)
+        {
+            temp=max(temp,dp[i][0]+dp[i][1]);//+的时候没有算当前点所在的块,但是res也少算一个
+        }
+        printf("%d\n",res-temp);
+    }
+    return 0;
+}
+
+```

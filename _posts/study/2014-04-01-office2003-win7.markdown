@@ -1,0 +1,443 @@
+---
+layout: post
+title:  WIN7 64位安装OFFICE2003：“错误1919,配置ODBC数据源MS Access Database时发生错误ODEC错误”
+author: "R. Liao" 
+categories: study
+tags: 错误1919
+---
+在64位系统上，32位软件的注册表的信息不是直接在在Software下，而是在Software\Wow6432Node下才是32位软件的注册信息。  
+只有64位软件才是直接在Software下的。  
+找一台win7 32位操作系统的机器导出注册表，位置如下：  
+HKEY_CURRENT_USER\Software\ODBC  
+HKEY_LOCAL_MACHINE\Software\ODBC  
+32位的注册导出文件，可以直接用记事本编辑文件，在Software后添加Wow6432Node。也就是：  
+HKEY_CURRENT_USER\Software\Wow6432Node\ODBC  
+HKEY_LOCAL_MACHINE\Software\Wow6432Node\ODBC    
+最后点击导入就可以了.  
+
+**下面两个注册表可以直接复制到记事本分别存为.reg文件，然后导入自己的机器的注册表就OK了。**
+
+##### reg文件1：  
+```  
+Windows Registry Editor Version 5.00
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC]
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI]
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\dBASE Files]
+"Driver"="C:\\Windows\\system32\\odbcjt32.dll"
+"DriverId"=dword:00000215
+"SafeTransactions"=dword:00000000
+"UID"=""
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\dBASE Files\Engines]
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\dBASE Files\Engines\Xbase]
+"ImplicitCommitSync"=""
+"Threads"=dword:00000003
+"UserCommitSync"="Yes"
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\Excel Files]
+"Driver"="C:\\Windows\\system32\\odbcjt32.dll"
+"DriverId"=dword:00000316
+"SafeTransactions"=dword:00000000
+"UID"=""
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\Excel Files\Engines]
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\Excel Files\Engines\Excel]
+"ImplicitCommitSync"=""
+"Threads"=dword:00000003
+"UserCommitSync"="Yes"
+"FirstRowHasNames"=hex:01
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\MS Access Database]
+"Driver"="C:\\Windows\\system32\\odbcjt32.dll"
+"DriverId"=dword:00000019
+"SafeTransactions"=dword:00000000
+"UID"=""
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\MS Access Database\Engines]
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\MS Access Database\Engines\Jet]
+"ImplicitCommitSync"=""
+"Threads"=dword:00000003
+"UserCommitSync"="Yes"
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\ODBC Data Sources]
+"Visio Database Samples"="Microsoft Access Driver (*.MDB)"
+"MS Access Database"="Microsoft Access Driver (*.mdb)"
+"Excel Files"="Microsoft Excel Driver (*.xls)"
+"dBASE Files"="Microsoft dBase Driver (*.dbf)"
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\Visio Database Samples]
+"SafeTransactions"=dword:00000000
+"DefaultDir"="\"\""
+"DBQ"="C:\\PROGRA~1\\MIF5BA~1\\Visio11\\2052\\DBSAMPLE.MDB"
+"DriverId"=dword:00000019
+"Driver"="C:\\Windows\\system32\\\\odbcjt32.dll"
+"UID"=""
+"ReadOnly"=hex:00
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\Visio Database Samples\Engines]
+[HKEY_CURRENT_USER\Software\Wow6432Node\ODBC\ODBC.INI\Visio Database Samples\Engines\Jet]
+"Threads"=dword:00000003
+"UserCommitSync"="Yes"
+"ImplicitCommitSync"=""  
+```
+  
+##### reg文件2：  
+```
+Windows Registry Editor Version 5.00
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC]
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBC.INI]
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI]
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Conversor de pagina de codigo MS]
+"Translator"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,\
+  00,79,00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,4d,00,53,00,43,00,50,00,\
+  58,00,4c,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,4d,00,53,00,43,00,50,00,58,00,\
+  4c,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"UsageCount"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Driver da Microsoft para arquivos texto (*.txt; *.csv)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,74,00,65,00,78,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.,*.asc,*.csv,*.tab,*.txt,*.csv"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Driver do Microsoft Access (*.mdb)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="2"
+"FileExtns"="*.mdb"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Driver do Microsoft dBase (*.dbf)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,64,00,62,00,73,00,\
+  65,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.dbf,*.ndx,*.mdx"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Driver do Microsoft Excel(*.xls)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,65,00,78,00,6c,00,\
+  33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.xls"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Driver do Microsoft Paradox (*.db )]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,70,00,64,00,78,00,\
+  33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.db"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Driver para o Microsoft Visual FoxPro]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,76,00,66,00,70,00,6f,00,64,00,\
+  62,00,63,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,76,00,66,00,70,00,6f,00,64,00,\
+  62,00,63,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="0"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.dbf,*.cdx,*.idx,*.fpt"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft Access Driver (*.mdb)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="2"
+"FileExtns"="*.mdb"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft Access-Treiber (*.mdb)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="2"
+"FileExtns"="*.mdb"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft dBase Driver (*.dbf)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,64,00,62,00,73,00,\
+  65,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.dbf,*.ndx,*.mdx"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft dBase VFP Driver (*.dbf)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,76,00,66,00,70,00,6f,00,64,00,\
+  62,00,63,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,76,00,66,00,70,00,6f,00,64,00,\
+  62,00,63,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="0"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.dbf,*.cdx,*.idx,*.fpt"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft dBase-Treiber (*.dbf)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,64,00,62,00,73,00,\
+  65,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.dbf,*.ndx,*.mdx"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft Excel Driver (*.xls)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,65,00,78,00,6c,00,\
+  33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.xls"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft Excel-Treiber (*.xls)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,65,00,78,00,6c,00,\
+  33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.xls"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft FoxPro VFP Driver (*.dbf)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,76,00,66,00,70,00,6f,00,64,00,\
+  62,00,63,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,76,00,66,00,70,00,6f,00,64,00,\
+  62,00,63,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="0"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.dbf,*.cdx,*.idx,*.fpt"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft ODBC for Oracle]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6d,00,73,00,6f,00,72,00,63,00,\
+  6c,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6d,00,73,00,6f,00,72,00,63,00,\
+  6c,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"SQLLevel"="1"
+"FileUsage"="0"
+"DriverODBCVer"="02.50"
+"ConnectFunctions"="YYY"
+"APILevel"="1"
+"CPTimeout"="120"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft Paradox Driver (*.db )]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,70,00,64,00,78,00,\
+  33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.db"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft Paradox-Treiber (*.db )]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,70,00,64,00,78,00,\
+  33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.db"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft Text Driver (*.txt; *.csv)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,74,00,65,00,78,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.,*.asc,*.csv,*.tab,*.txt,*.csv"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft Text-Treiber (*.txt; *.csv)]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,62,00,63,00,6a,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,6f,00,64,00,74,00,65,00,78,00,\
+  74,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="1"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.,*.asc,*.csv,*.tab,*.txt,*.csv"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft Visual FoxPro Driver]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,76,00,66,00,70,00,6f,00,64,00,\
+  62,00,63,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,76,00,66,00,70,00,6f,00,64,00,\
+  62,00,63,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="0"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.dbf,*.cdx,*.idx,*.fpt"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\Microsoft Visual FoxPro-Treiber]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,76,00,66,00,70,00,6f,00,64,00,\
+  62,00,63,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,76,00,66,00,70,00,6f,00,64,00,\
+  62,00,63,00,2e,00,64,00,6c,00,6c,00,00,00
+"APILevel"="0"
+"ConnectFunctions"="YYN"
+"DriverODBCVer"="02.50"
+"FileUsage"="1"
+"FileExtns"="*.dbf,*.cdx,*.idx,*.fpt"
+"SQLLevel"="0"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\MS Code Page Translator]
+"Translator"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,\
+  00,79,00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,4d,00,53,00,43,00,50,00,\
+  58,00,4c,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,4d,00,53,00,43,00,50,00,58,00,\
+  4c,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"UsageCount"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\MS Code Page-Ubersetzer]
+"Translator"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,\
+  00,79,00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,4d,00,53,00,43,00,50,00,\
+  58,00,4c,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,4d,00,53,00,43,00,50,00,58,00,\
+  4c,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"UsageCount"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\ODBC Core]
+"UsageCount"=dword:00000001
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\ODBC Drivers]
+"SQL Server"="Installed"
+"Microsoft ODBC for Oracle"="Installed"
+"Microsoft Access Driver (*.mdb)"="Installed"
+"Microsoft Access-Treiber (*.mdb)"="Installed"
+"Driver do Microsoft Access (*.mdb)"="Installed"
+"Microsoft dBase Driver (*.dbf)"="Installed"
+"Microsoft dBase-Treiber (*.dbf)"="Installed"
+"Driver do Microsoft dBase (*.dbf)"="Installed"
+"Microsoft Excel Driver (*.xls)"="Installed"
+"Microsoft Excel-Treiber (*.xls)"="Installed"
+"Driver do Microsoft Excel(*.xls)"="Installed"
+"Microsoft Paradox Driver (*.db )"="Installed"
+"Microsoft Paradox-Treiber (*.db )"="Installed"
+"Driver do Microsoft Paradox (*.db )"="Installed"
+"Microsoft Text Driver (*.txt; *.csv)"="Installed"
+"Microsoft Text-Treiber (*.txt; *.csv)"="Installed"
+"Driver da Microsoft para arquivos texto (*.txt; *.csv)"="Installed"
+"Microsoft Visual FoxPro Driver"="Installed"
+"Microsoft FoxPro VFP Driver (*.dbf)"="Installed"
+"Microsoft dBase VFP Driver (*.dbf)"="Installed"
+"Microsoft Visual FoxPro-Treiber"="Installed"
+"Driver para o Microsoft Visual FoxPro"="Installed"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\ODBC Translators]
+"MS Code Page Translator"="Installed"
+"MS Code Page-Ubersetzer"="Installed"
+"Conversor de pagina de codigo MS"="Installed"
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\ODBC\ODBCINST.INI\SQL Server]
+"UsageCount"=dword:00000001
+"Driver"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,53,00,51,00,4c,00,53,00,52,00,\
+  56,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"Setup"=hex(2):25,00,57,00,49,00,4e,00,44,00,49,00,52,00,25,00,5c,00,73,00,79,\
+  00,73,00,74,00,65,00,6d,00,33,00,32,00,5c,00,73,00,71,00,6c,00,73,00,72,00,\
+  76,00,33,00,32,00,2e,00,64,00,6c,00,6c,00,00,00
+"SQLLevel"="1"
+"FileUsage"="0"
+"DriverODBCVer"="03.50"
+"ConnectFunctions"="YYY"
+"APILevel"="2"
+"CPTimeout"="60"  
+```

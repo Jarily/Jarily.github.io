@@ -1,0 +1,120 @@
+---
+layout: post
+title:  PKU3259(Wormholes)判定负权环-Bellman_Ford算法
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Wormholes](http://poj.org/problem?id=3259)
+
+### 题意         
+John的农场里N块地,地之间有M条路,W个虫洞;  
+虫洞是一条单向路,会在你离开之前把你传送到目的地;  
+就是当你过去的时候时间会倒退T秒(可以理解为负权边),要求会不会在从某块地出发后又回来,看到了离开之前的自己;  
+即看图中有没有负权环,有的话就输出YES,没有的话就输出NO;
+
+### 分析      
+求图中是否有负权环,Bellman_Ford算法或者SPFA算法都可以;  
+如果有负权环,的话John可以无限次走这个环,使得时间一定能得到一个负值;  
+所以存在负环话就输出YES,否则输出NO;  
+需要注意的是M条路为双向正权边,而W个虫洞为单向负权边;
+
+### 代码    
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 3259
+#	   @date		 2013/04/13
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
+#include<queue>
+#include<algorithm>
+using namespace std;
+
+const int N=10000;
+const int INF=0xffffff;
+
+struct Edge
+{
+    int u,v,w;
+} edge[N];
+
+int k;//统计边的数量
+int n,m,w;
+int dis[N];
+
+bool Bellman_Ford()
+{
+    for(int i=1; i<=n; i++)//初始化
+        dis[i]=INF;
+    bool flag;
+    for(int i=1; i<n; i++)//循环求解
+    {
+        flag=false;
+        for(int j=1; j<=k; j++)
+        {
+            if(dis[edge[j].v]>dis[edge[j].u]+edge[j].w)
+            {
+                dis[edge[j].v]=dis[edge[j].u]+edge[j].w;
+                flag=true;
+            }
+        }
+        if(!flag)//如果某次循环，没有更新源点到任何顶点的dis,那提前结束
+            break;
+    }
+
+    for(int j=1; j<=k; j++) //判断是否存在负环
+        if(dis[edge[j].v]>dis[edge[j].u]+edge[j].w)
+            return true;
+    return false;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int tcase;
+    scanf("%d",&tcase);
+    while(tcase--)
+    {
+        memset(edge,0,sizeof(edge));
+        scanf("%d%d%d",&n,&m,&w);
+        k=0;
+        int s,e,t;
+        for(int i=1; i<=m; i++)//无向图
+        {
+            scanf("%d%d%d",&s,&e,&t);
+            k++;
+            edge[k].u=s;
+            edge[k].v=e;
+            edge[k].w=t;
+            k++;
+            edge[k].u=e;
+            edge[k].v=s;
+            edge[k].w=t;
+
+        }
+        for(int i=1; i<=w; i++)//单向边
+        {
+            scanf("%d%d%d",&s,&e,&t);
+            k++;
+            edge[k].u=s;
+            edge[k].v=e;
+            edge[k].w=-t;
+        }
+
+        if(Bellman_Ford())
+            puts("YES");
+        else
+            puts("NO");
+    }
+    return 0;
+}
+
+
+```

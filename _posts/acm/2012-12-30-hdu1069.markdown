@@ -1,0 +1,176 @@
+---
+layout: post
+title:  HDU1069(Monkey and Banana)DP
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接
+[Monkey and Banana](http://acm.hdu.edu.cn/showproblem.php?pid=1069)
+
+### 题意  
+有n种不同的长方体砖块，而且每种砖块都是取之不尽的；  
+砖块能够翻转，即可以将任意两边当底面，剩下的边当作高；  
+用砖块叠成最高的塔帮猴子摘得香蕉；  
+但是要保证每块砖块的底面两天边都要小于它下面那块砖的底面两条边；  
+求能叠塔的最大高度；  
+
+### 分析  
+子问题是以每个矩形为底的塔的最大高度；  
+所有子问题的解中最大的一个就是原问题的解；  
+其中以某个矩形为底的塔的高度可以由自身高度加上可以放在其上的塔的最大高度得到；  
+因此本题可以用动态规划来解；  
+
+### 法一：直接DP  
+对于第x块砖块，如果能够叠放在第i块砖上面；  
+则其高度t就是前面i块砖获得的最优高度加上本块砖的高度；  
+并且放上这块砖确实能够得到最优解（t>h[x]）；
+
+#### 代码  
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 1069
+#	   @date		 2012/12/30
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstdlib>
+using namespace std;
+const int N=111;
+int b[N][3];
+int h[N];
+int n;
+void boxs(int v,int x,int y,int z)
+{
+    b[v][0]=x;
+    b[v][1]=y;
+    b[v][2]=z;
+}
+int DP(int v)
+{
+    if(h[v]!=-1)
+        return h[v];
+    if(v>=n)
+        return 0;
+    int t=0;
+    for(int i=1; i<n; i++)
+    {
+        if((b[v][0]>b[i][0]&&b[v][1]>b[i][1])||(b[v][0]>b[i][1]&&b[v][1]>b[i][0]))
+            t=DP(i)+b[i][2];
+        if(t>h[v])
+            h[v]=t;
+    }
+    return h[v];
+}
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int N,i,j,k,T=0;
+    int x,y,z;
+    while(cin>>N,N)
+    {
+        T++;
+        b[0][0]=b[0][1]=b[0][2]=0xffffff;
+        n=1;
+        for(i=0; i<N; i++)
+        {
+            cin>>x>>y>>z;
+            boxs(n++,x,y,z);
+            boxs(n++,y,z,x);
+            boxs(n++,x,z,y);
+        }
+        for(i=0; i<=n; i++)
+            h[i]=-1;
+        printf("Case %d: maximum height = %d\n",T,DP(0));
+    }
+    return 0;
+}
+```  
+
+### 法二 排序DP(相当于最长不下降子序列)  
+如果把一块砖块的所有6种摆放方式转化为6种不同的砖块；  
+即相当于有6n种砖块，然后按照一个方向从大到小排序；  
+再依次检查每一块与其下面的所有砖块是否满足摆放条件；  
+将每一块砖块放到塔中能够获得的最大高度记录到数组height[N]中；  
+则该数组中的最大值就是该题的解了；   
+
+#### 代码  
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 1069
+#	   @date		 2012/12/30
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstdlib>
+using namespace std;
+const int N=111;
+int b[N][3];
+int h[N];
+int n;
+
+struct block
+{
+    int x,y,z;
+} box[N*2];
+
+void oriente(int k,int x,int y,int z)
+{
+    box[k].x=x;
+    box[k].y=y;
+    box[k].z=z;
+}
+
+int cmp(const void *a,const void *b)
+{
+    return ((block*)b)->x-((block*)a)->x;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int n;
+    int height[N*2];
+    int tcase=1;
+    while(scanf("%d",&n)&&n)
+    {
+        int num=0;
+        for(int i=0; i<n; i++)
+        {
+            int x,y,z;
+            scanf("%d%d%d",&x,&y,&z);
+            oriente(num++,x,y,z);
+            oriente(num++,x,z,y);
+            oriente(num++,y,z,x);
+            oriente(num++,y,x,z);
+            oriente(num++,z,x,y);
+            oriente(num++,z,y,x);
+        }
+        n*=6;
+        qsort(box,n,sizeof(block),cmp);
+        for(int i=0; i<n; i++)
+        {
+            height[i]=box[i].z;
+        }
+        int max;
+        int ans=0;
+        for(int i=0; i<n; i++)
+        {
+            max=0;
+            for(int j=i-1; j>=0; j--)
+            {
+                if(box[i].x<box[j].x&&box[i].y<box[j].y&&max<height[j])
+                    max=height[j];
+            }
+            height[i]+=max;
+            if(ans<height[i])
+                ans=height[i];
+        }
+        printf("Case %d: maximum height = %d\n",tcase++,ans);
+    }
+    return 0;
+}
+```

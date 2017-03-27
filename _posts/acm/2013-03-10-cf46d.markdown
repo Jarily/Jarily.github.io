@@ -1,0 +1,164 @@
+---
+layout: post
+title:   Codeforces46D(Parking Lot)线段树区间查询
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Parking Lot](http://codeforces.com/problemset/problem/46/D)
+
+### 题意      
+有一条长度为L的街道,有N个操作,操作有两种:  
+(1)"1 a",表示有一辆长度为a的车开进来想找停车位;  
+停车位必须满足与它前面的车距离至少为b,与后面的车距离至少为f;  
+如果能找到这样的停车位;输出这辆车的起始位置(且这个位置最小),否则输出-1;  
+(2)"2 a",表示第a个事件里进来停车的那辆车开出去了;
+
+### 思想  
+
+建立起点为-b,终点为L+f的线段树;  
+查找的时候,直接查找len+b+f的线段树就可以了;  
+其他地方类似于pku3667;  
+线段树的更新要用延迟更新;  
+在区间查询和更新的时候加入一个延迟节点;  
+每次要在下次查询或者更新到该区间时;  
+再把节点的信息传递到左右孩子的结点上;  
+这样更新大大减少了时间和空间上的开销;
+  
+### 代码
+    
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 Codeforces46D
+#	   @date		 2013/03/10
+============================================================================**/
+#include<iostream>
+#include<cstring>
+#include<cstdlib>
+#include<cstdio>
+#include<climits>
+#include<algorithm>
+using namespace std;
+
+#define L l,m,u<<1
+#define R m+1,r,u<<1|1
+
+const int N =100010;
+
+struct darling
+{
+    int t,l;
+} s[N];
+
+struct car
+{
+    int ls,rs,ms;
+    int flag;
+} a[N*4];
+
+void PushUp(int u,int m)//把当前结点的信息更新到父结点
+{
+    a[u].ls=a[u<<1].ls;
+    a[u].rs=a[u<<1|1].rs;
+    if(a[u].ls==m-(m>>1))
+        a[u].ls+=a[u<<1|1].ls;
+    if(a[u].rs==(m>>1))
+        a[u].rs+=a[u<<1].rs;
+    a[u].ms=max(a[u<<1|1].ls+a[u<<1].rs,max(a[u<<1].ms,a[u<<1|1].ms));
+}
+
+void PushDown(int u,int m)//把当前结点的信息更新给儿子结点
+{
+    if (a[u].flag!=-1)
+    {
+        a[u<<1].flag=a[u<<1|1].flag=a[u].flag;
+        a[u<<1].ms=a[u<<1].ls=a[u<<1].rs=a[u].flag?0:m-(m>>1);
+        a[u<<1|1].ms=a[u<<1|1].ls=a[u<<1|1].rs=a[u].flag?0:(m>>1);
+        a[u].flag=-1;
+    }
+}
+
+void build(int l,int r,int u)
+{
+    a[u].ms=a[u].ls=a[u].rs=r-l+1;
+    a[u].flag=-1;
+    if(l==r)
+        return;
+    int m=(l+r)>>1;
+    build(L);
+    build(R);
+}
+
+void update(int l1,int r1,int c,int l,int r,int u)//区间替换
+{
+    if(l1<=l&&r<=r1)
+    {
+        a[u].ms=a[u].ls=a[u].rs=c?0:r-l+1;
+        a[u].flag=c;
+        return;
+    }
+    PushDown(u,r-l+1);
+    int m=(l+r)>>1;
+    if(l1<=m)
+        update(l1,r1,c,L);
+    if(m<r1)
+        update(l1,r1,c,R);
+    PushUp(u,r-l+1);
+}
+
+int query(int w,int l,int r,int u)//查询满足条件的最左端点
+{
+    if(l==r)
+        return l;
+    PushDown(u,r-l+1);
+    int m=(l+r)>>1;
+    if(a[u<<1].ms>=w)//左儿子的ms值大于等于x,则到左儿子里去找;
+        return query(w,L);
+    else if(a[u<<1].rs+a[u<<1|1].ls>=w)//如果左儿子的rs加上右儿子的ls大于等于x，则直接返回左儿子的右端点减去左儿子的rs值;
+        return m-a[u<<1].rs+1;
+    return query(w,R);//否则到右儿子里去找;
+}
+
+int main()
+{
+   //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int L1,b,f;
+    while(~scanf("%d%d%d",&L1,&b,&f))
+    {
+        build(-b,L1+f,1);
+        int n;
+        scanf("%d",&n);
+        for(int i=1;i<=n;i++)
+        {
+            int op,x;
+            scanf("%d%d",&op,&x);
+            if(op==1)
+            {
+                s[i].l=x;
+                if(a[1].ms<x+b+f+1)
+                {
+                    puts("-1");
+                    s[i].t=-1;
+                }
+                else
+                {
+                    int p=query(x+b+f,-b,L1+f,1);
+                    printf("%d\n",p+b);
+                    s[i].t=p+b;
+                    s[i].l=x;
+                    update(p+b,p+b+x-1,1,-b,L1+f,1);
+                }
+            }
+            else
+            {
+                s[i].t=-1;
+                update(s[x].t,s[x].t+s[x].l-1,0,-b,L1+f,1);
+            }
+        }
+    }
+    return 0;
+}
+```

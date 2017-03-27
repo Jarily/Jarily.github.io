@@ -1,0 +1,119 @@
+---
+layout: post
+title:   线性时间求最大回文子串的Manacher算法
+author: "R. Liao" 
+categories: acm
+tags: 回文串
+---
+
+### 概念  
+回文串指的是一个正着读和反着读都一样的字符串;  
+要在一个字符串中求出它的长度最长的回文子串;  
+
+### 思想  
+Manacher算法可以在O(n)的线性时间复杂度的情况下;  
+求出以每个字符为中心的最长回文子串有多长;  
+该算法把奇数的回文串和偶数的回文串统一起来考虑;  
+大大的减少了奇数串和偶数串分开处理的麻烦;  
+该算法充分利用了字符匹配的特殊性，避免了大量不必要的重复匹配;  
+然后用一个辅助数组P记录以每个字符为中心的最长回文串的信息;  
+P[i]记录的是以字符s[i]为中心的最长回文串;  
+当以s[i]为第一个字符，这个最长回文串向右延伸了P[i]个字符;  
+由p数组的性质，新串中以s[i]为中间字符的回文串的长度为p[i]-1;  
+以#为中间字符的就是长度为偶数的,以非#号为中间字符的就是长度为奇数的;  
+只要在O(n)时间复杂度内求出P数组;  
+最长回文子串就可以只需扫描一遍p数组就可以得到结果了;
+
+### 过程  
+先在每两个相邻字符中间插入一个分隔符;  
+当然这个分隔符要在原串中没有出现过，一般可以用‘#’分隔;  
+这样就非常巧妙的将奇数长度回文串与偶数长度回文串统一起来考虑了;  
+即此时回文串长度全为奇数了,为了防止字符比较的时候指针小于0;  
+在加了‘#’的字符串之前还加了字符‘$’,即新串下标是从1开始的;  
+由于这个算法是线性从前往后扫描的;  
+那么准备求P[i]的时候;  
+i以前的P[j]是已经得到了的;  
+用变量k表示在i之前的回文串中，延伸至最右端的位置;  
+同时用变量pos记下取得这个最优的k时的位置;  
+
+### 应用-HDU  3068   
+
+#### 链接
+[最长回文](http://acm.hdu.edu.cn/showproblem.php?pid=3068)   
+
+#### 代码
+
+```
+#include<iostream>
+#include<cstdio>
+#include<cmath>
+#include<cstring>
+#include<cstdlib>
+#include<algorithm>
+using namespace std;
+
+const int N=100010;
+char s[N*2],str[N];
+int p[N*2];
+int n;
+
+int min(int x,int y)
+{
+    return x<y?x:y;
+}
+
+void init()
+{
+    n=strlen(str);
+    s[0]='$';
+    s[1]='#';
+    for(int i=0; i<n; i++)
+    {
+        s[i*2+2]=str[i];
+        s[i*2+3]='#';
+    }
+    n=n*2+2;
+    s[n]='\0';
+}
+
+void Manacher()
+{
+    int k=0;//k表示在i之前的回文串中，延伸至最右端的位置
+    int pos;//pos表示取得这个最优的k时的位置
+    for(int i=1; i<n; i++)
+    {
+        if(k>i)//当前面比较的最远长度k>i的时候，P[i]有一个最小值
+            p[i]=min(p[2*pos-i],k-i);
+        else
+            p[i]=1;
+
+        while(s[i+p[i]]==s[i-p[i]])
+        {
+            p[i]++;
+        }
+        if(p[i]+i>k)
+        {
+            k=p[i]+i;
+            pos=i;
+        }
+    }
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(~scanf("%s",str))
+    {
+        init();
+        Manacher();
+        int res=0;
+        for(int i=1; i<n; i++)
+        {
+            if(res<p[i])
+                res=p[i];
+        }
+        printf("%d\n",res-1);
+    }
+    return 0;
+}
+```

@@ -1,0 +1,274 @@
+---
+layout: post
+title: PKU1679(The Unique MST)判断最小生成树的唯一性-次小生成树
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[The Unique MST](http://poj.org/problem?id=1679)
+
+### 题意           
+给出一个连通无向图,判断它的最小生成树是否唯一;  
+如果唯一，输出生成树的大小，否则输出"Not Unique!";
+
+### 分析      
+本题可以尝试求与最小生成树权值相等的树是否存在;  
+但是更好的思路是直接求次小生成树,如果次小生成树等于最小生成树;  
+则说明最小生成树不唯一,否则最小生成树一定是唯一的;
+
+[次小生成树的求法请点击](http://jarily.com/low-mst/)  
+
+本题分别写了Prim算法的和Kruskal算法版本的,不过Kruskal的超时了,弱渣不知道如何优化了,求高手护之;
+
+### 代码一   Prim算法
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 1679
+#	   @date		 2013/05/10
+============================================================================**/
+#include<iostream>
+#include<string>
+#include<cstdio>
+#include<map>
+#include<cstring>
+#include<cmath>
+#include<algorithm>
+using namespace std;
+
+const int INF=0xfffff;
+const int N=101;
+
+
+int G[N][N],dist[N];
+int path[N][N];//从i到j的路径上最大边的权值
+int pre[N],visit[N];
+bool used[N][N];//边是否在该MST中
+int n,m;
+
+int Prim()
+{
+    int Mst=0;
+    memset(visit, 0, sizeof(visit));
+    memset(used, 0, sizeof(used));
+    memset(path, 0, sizeof(path));
+    visit[1]=1;
+    for(int i=1; i<=n; ++i)
+    {
+        dist[i]=G[1][i];
+        pre[i]=1;
+    }
+    for(int i=1; i<n; ++i)
+    {
+        int u=-1;
+        for(int j=1; j<=n; ++j)
+        {
+            if(!visit[j])
+            {
+                if(u==-1||dist[j]<dist[u])
+                    u=j;
+            }
+        }
+        used[u][pre[u]]=used[pre[u]][u]=true;//加入MST
+        Mst+=G[pre[u]][u];
+        visit[u]=1;
+        for(int j=1; j<=n; ++j)
+        {
+            if(visit[j]&&j!=u)//求从u到j的路径上最大边的权值
+            {
+                path[u][j]=path[j][u]=max(path[j][pre[u]],dist[u]);
+            }
+            if(!visit[j])
+            {
+                if(dist[j]>G[u][j])//更新相邻顶点的dist
+                {
+                    dist[j]=G[u][j];
+                    pre[j]=u;
+                }
+            }
+
+        }
+    }
+    return Mst;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int tcase;
+    scanf("%d",&tcase);
+    while(tcase--)
+    {
+        scanf("%d%d",&n,&m);
+        for(int i=0; i<=n; i++)
+            for(int j=i+1; j<=n; j++)
+                G[i][j]=G[j][i]=INF;
+        int u,v,w;
+        for(int i=1; i<=m; ++i)
+        {
+            scanf("%d%d%d",&u,&v,&w);
+            G[u][v]=G[v][u]=w;
+        }
+        int Mst=Prim();
+        int res=INF;
+        for(int i=1; i<=n; ++i)
+        {
+            for(int j=1; j<=n; ++j)
+                if(i!=j)
+                {
+                    if(!used[i][j])
+                        res=min(res,Mst+G[i][j]-path[i][j]);
+                }
+        }
+        if(res==Mst)
+            puts("Not Unique!");
+        else
+            printf("%d\n",Mst);
+    }
+    return 0;
+}
+```
+
+### 代码二   Prim算法 TLE  
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 1679
+#	   @date		 2013/05/10
+============================================================================**/
+#include<iostream>
+#include<string>
+#include<cstdio>
+#include<map>
+#include<cstring>
+#include<cmath>
+#include<algorithm>
+using namespace std;
+
+const int INF=0xffffff;
+const int N=101;
+
+struct Edge
+{
+    int u,v,w;
+    bool select;
+} edge[N];
+
+bool cmp(Edge a,Edge b)
+{
+   // if(a.w==b.w)
+     //   return a.u<b.u;
+    return a.w<b.w;
+    /*if(a.w!=b.w)
+        return a.w<b.w;
+    if(a.u!=b.u)
+        return a.v<b.v;*/
+}
+
+struct node
+{
+    int to;
+    int next;
+};
+
+node link[N];//边数组
+int len;//边数组中数据的个数
+int head[N];//头结点
+int end[N];//尾结点
+int length[N][N];//每两点在MST上路径的最长边长
+int f[N];
+int n,m;
+
+int Find(int x)
+{
+    if(x!=f[x])
+        f[x]=Find(f[x]);
+    return f[x];
+}
+
+void Merge(int x,int y)
+{
+    f[y]=x;
+}
+
+void Kruskal()
+{
+    for(len=0; len<n; len++) //初始化邻接表,对于每个结点添加一条指向其自身的边,表示以i为代表元的集合只有点i
+    {
+        link[len].to=len+1;
+        link[len].next=head[len+1];
+        end[len+1]=len;
+        head[len+1]=len;
+    }
+    sort(edge+1,edge+1+m,cmp);
+
+    int vertex=0;
+    for(int i=1; i<=m; i++)
+    {
+        if(vertex==n-1)
+            break;
+        if(edge[i].w<0)
+            continue;
+        int x=Find(edge[i].u);
+        int y=Find(edge[i].v);
+        if(x!=y)//修改部分,遍历两个结点所在的集合
+        {
+            //每次合并两个等价类的时候,分别属于两个等价类的两个点间的最长边一定是当前加入的边
+            for(int j=head[x]; j!=-1; j=link[j].next)
+            {
+                for(int k=head[y]; k!=-1; k=link[k].next)
+                {
+                    length[link[j].to][link[k].to]=length[link[k].to][link[j].to]=edge[i].w;
+                }
+            }
+            link[end[y]].next=head[x];//合并两个邻接表
+            end[y]=end[x];
+            Merge(x,y);
+            vertex++;
+            edge[i].select=true;
+        }
+    }
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int tcase;
+    scanf("%d",&tcase);
+    while(tcase--)
+    {
+        scanf("%d%d",&n,&m);
+        memset(length,0,sizeof(length));
+        memset(head,-1,sizeof(head));
+        memset(end,-1,sizeof(end));
+        int u,v,w;
+        for(int i=1; i<=m; ++i)
+        {
+            scanf("%d%d%d",&edge[i].u,&edge[i].v,&edge[i].w);
+        }
+        for(int i=1; i<=n; i++)
+            f[i]=i;
+        Kruskal();
+        int Mst=0;
+        for(int i=1; i<=m; i++)
+        {
+            if(edge[i].select)
+                Mst+=edge[i].w;
+        }
+        int res=INF;
+        for(int i=1; i<=m; i++)
+        {
+            if(!edge[i].select)
+                res=min(res,Mst+edge[i].w-length[edge[i].u][edge[i].v]);
+        }
+        if(res==Mst)
+            puts("Not Unique!");
+        else
+            printf("%d\n",Mst);
+    }
+    return 0;
+}
+```

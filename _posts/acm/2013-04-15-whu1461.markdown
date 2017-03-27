@@ -1,0 +1,120 @@
+---
+layout: post
+title:  WHU1461(A problem on tree)贪心+找规律
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[A problem on tree](http://acm.whu.edu.cn/land/problem/detail?problem_id=1461)
+
+### 题意         
+定义的一个求ch值的函数(见下面注释部分);  
+即求树中根结点的ch值的方法,要你想办法帮他实现这个程序;
+
+### 分析      
+先一条链的情况：  
+设第一个点的值是a,第二个是b,第三个是c...那么有：  
+ch[1]=a  
+ch[2]=a+b  
+ch[3]=max(2a+c,a+b+c)  
+ch[4]=max(3a+d,2a+2b+d,2a+c+d,a+b+c+d)  
+ch[5]=max(4a,3a+3b,4a+c,2a+2b+2c,value[4])+e  
+可以发现4a+c>4a,可得结论:一个点的ch值最多从不超过3层的地方转移而来;  
+记录每个节点最下三层最大的ch值,然后当前节点从这三个值中取最大的转移即可;  
+这是官方的解题报告,我是有点没怎么看懂,求大神来一发;
+
+### 代码    
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 WHOJ 1461
+#	   @date		 2013/04/15
+============================================================================**/
+#include<iostream>
+#include<cstring>
+#include<cmath>
+#include<cstdio>
+#include<cstdlib>
+#include<vector>
+#include<algorithm>
+using namespace std;
+
+const int N=11111;
+
+typedef long long LL;
+
+int n;
+
+LL ch[N][4];
+LL value[N];
+
+vector<int>v[11000];
+
+/*
+LL ch[N],value[N],depth[N];
+int cal(int v)
+{
+    ch[v]=value[v];
+    if (v  is leaf)
+        return value[v];
+    ch[v]=0;
+    for( all u which  is descendant  of v  )
+        ch[v]=max(ch[v],cal(u)*(depth[u]–depth[v])+value[v])
+              return ch[v];
+}
+*/
+
+void dfs(int u,int father)
+{
+    if(v[u].size()==1&&v[u][0]==father)
+    {
+        ch[u][0]=value[u];
+        ch[u][1]=ch[u][2]=0;
+        return;
+    }
+    for(int i=0; i<v[u].size(); i++)
+    {
+        if (v[u][i]==father)
+            continue;
+        dfs(v[u][i],u);
+        int j=v[u][i];
+        ch[u][0]=max(ch[u][0],max(ch[j][0],max(ch[j][1]*2,ch[j][2]*3))+value[u]);
+        ch[u][1]=max(ch[u][1],ch[j][0]);
+        ch[u][2]=max(ch[u][2],ch[j][1]);
+    }
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int tcase;
+    scanf("%d",&tcase);
+    int t=0;
+    while(tcase--)
+    {
+    	memset(ch,0,sizeof(ch));
+        scanf("%d",&n);
+        for(int i=1; i<=n; i++)
+        {
+            v[i].clear();
+            scanf("%lld",&value[i]);
+        }
+        int x,y;
+        for(int i=1; i<n; i++)
+        {
+            scanf("%d%d",&x,&y);
+            v[x].push_back(y);
+            v[y].push_back(x);
+        }
+        dfs(1,0);
+        t++;
+        printf("Case %d: %lld\n",t,ch[1][0]);
+    }
+    return 0;
+}
+
+
+```

@@ -1,0 +1,151 @@
+---
+layout: post
+title:   PKU3667(Hotel)线段树
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Hotel](http://poj.org/problem?id=3667)
+
+### 题意      
+有一个旅馆,有N个房间排成一排;  
+现在有两种操作:  
+第一是有a个顾客要入住连续的a个房间;  
+要求输出最小的左端点的位置,不能满足就输出0;  
+第二是将以a开始，长度为b的连续房间清空;  
+1  a:  询问是不是有连续长度为a的空房间,有的话住进最左边;  
+2 a b: 将[a,a+b-1]的房间清空;
+
+### 思想  
+记录区间中最长的空房间  
+lsum表示区间左边连续的空房个数;  
+rsum表示区间右边连续的空房个数;  
+msum表示区间上最大的一段空房的长度;
+
+### 过程  
+如果1~n区间的msum值都比x小，就无解，否则有解;  
+对于每一个区间，如果它的左儿子的msum值大于等于x,则到左儿子里去找;  
+如果左儿子的rsum加上右儿子的lsum大于等于x，则直接返回左儿子的右端点减去左儿子的rsum值;  
+否则到右儿子里去找;  
+
+### 代码    
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 3667
+#	   @date		 2013/03/07
+============================================================================**/#include<iostream>
+#include<cstring>
+#include<cstdlib>
+#include<cstdio>
+#include<climits>
+#include<algorithm>
+using namespace std;
+
+#define L  l , m , u << 1
+#define R  m + 1 , r , u << 1 | 1
+
+const int N = 55555;
+int lsum[N<<2];//区间左边连续的空房个数;
+int rsum[N<<2];//区间右边连续的空房个数;
+int msum[N<<2];//区间上最大的一段空房的长度;
+
+int cover[N<<2];
+
+void PushDown(int u,int m)//把当前结点的信息更新给儿子结点
+{
+    if (cover[u] != -1)
+    {
+        cover[u<<1] = cover[u<<1|1] = cover[u];
+        msum[u<<1] = lsum[u<<1] = rsum[u<<1] = cover[u] ? 0 : m - (m >> 1);
+        msum[u<<1|1] = lsum[u<<1|1] = rsum[u<<1|1] = cover[u] ? 0 : (m >> 1);
+        cover[u] = -1;
+    }
+}
+
+void PushUp(int u,int m)//把当前结点的信息更新到父结点
+{
+    lsum[u] = lsum[u<<1];
+    rsum[u] = rsum[u<<1|1];
+    if(lsum[u] == m - (m >> 1))
+        lsum[u] += lsum[u<<1|1];
+    if(rsum[u] == (m >> 1))
+        rsum[u] += rsum[u<<1];
+    msum[u] = max(lsum[u<<1|1] + rsum[u<<1] , max(msum[u<<1] , msum[u<<1|1]));
+}
+
+void build(int l,int r,int u)
+{
+    msum[u] = lsum[u] = rsum[u] = r - l + 1;
+    cover[u] = -1;
+    if (l == r)
+        return;
+    int m = (l + r) >> 1;
+    build(L);
+    build(R);
+}
+
+void update(int l1,int r1,int c,int l,int r,int u)//区间替换
+{
+    if (l1 <= l && r <= r1)
+    {
+        msum[u] = lsum[u] = rsum[u] = c ? 0 : r - l + 1;
+        cover[u] = c;
+        return ;
+    }
+    PushDown(u , r - l + 1);
+    int m = (l + r) >> 1;
+    if (l1 <= m)
+        update(l1 , r1 , c , L);
+    if (m < r1)
+        update(l1 , r1 , c , R);
+    PushUp(u , r - l + 1);
+}
+
+int query(int w,int l,int r,int u)//查询满足条件的最左断点
+{
+    if (l == r)
+        return l;
+    PushDown(u , r - l + 1);
+    int m = (l + r) >> 1;
+    if (msum[u<<1] >= w)//左儿子的msum值大于等于x,则到左儿子里去找;
+        return query(w , L);
+    else if (rsum[u<<1] + lsum[u<<1|1] >= w)//如果左儿子的rsum加上右儿子的lsum大于等于x，则直接返回左儿子的右端点减去左儿子的rsum值;
+        return m - rsum[u<<1] + 1;
+    return query(w , R);//否则到右儿子里去找;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int n , m;
+    scanf("%d%d",&n,&m);
+    build(1 , n , 1);
+    while (m--)
+    {
+        int op , a , b;
+        scanf("%d",&op);
+        if (op == 1)
+        {
+            scanf("%d",&a);
+            if (msum[1]<a)
+                puts("0");
+            else
+            {
+                int p = query(a , 1 , n , 1);
+                printf("%d\n",p);
+                update(p , p + a - 1 , 1 , 1 , n , 1);
+            }
+        }
+        else
+        {
+            scanf("%d%d",&a,&b);
+            update(a , a + b - 1 , 0 , 1 , n , 1);
+        }
+    }
+    return 0;
+}
+```

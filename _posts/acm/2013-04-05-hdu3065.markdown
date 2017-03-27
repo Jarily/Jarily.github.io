@@ -1,0 +1,159 @@
+---
+layout: post
+title: HDU3065(病毒侵袭持续中)字符串匹配-简单的AC自动机
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[病毒侵袭持续中](http://acm.hdu.edu.cn/showproblem.php?pid=3065)
+
+### 题意    
+给多串病毒和一个源码;  
+求每串病毒在源码中出现的次数;
+
+### 思想  
+AC自动机;  
+给每串病毒一个编号;  
+当匹配成功后用visit数组记录该病毒出现的次数;
+
+### 代码
+  
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 3065
+#	   @date		 2013/04/05
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+using namespace std;
+
+const int K=27;
+const int C=55;
+const int N=1010;
+const int M=2000010;
+
+int visit[N];
+
+struct node
+{
+    node *fail; //失败指针 　　
+    node *next[K]; //Tire每个节点的26个子节点（最多26个字母） 　　
+    int count; //用来记录病毒的编号　　
+    node()//构造函数初始化 　　
+    {
+        fail=NULL;
+        count=-1;
+        memset(next,NULL,sizeof(next));
+    }
+}*q[M]; //队列，方便用于bfs构造失败指针 　
+
+char a[N][C]; //输入的单词 　　
+char str[M]; //模式串 　　
+int head,tail; //队列的头尾指针 　
+
+void insert(char *str,node *&root,int x)//建立Trie
+{
+    if (root==NULL)
+        root=new node;
+    node *p=root;
+    int len=strlen(str);
+    for(int i=0; i<len; ++i)
+    {
+        int temp=str[i]-'A';
+        if(p->next[temp]==NULL)
+            p->next[temp]=new node();
+        p=p->next[temp];
+    }
+    p->count=x;
+}
+
+void build_ac_automation(node *root)//初始化fail指针，BFS
+{
+    root->fail=NULL;
+    q[head++]=root;//弹出队头
+    while(head!=tail)
+    {
+        node *temp=q[tail++];
+        node *p=NULL;
+        for(int i=0; i<K; i++)
+        {
+            if(temp->next[i])
+            {
+                if(temp==root)//第一个元素fail必指向根
+                    temp->next[i]->fail=root;
+                else
+                {
+                    p=temp->fail;//失败指针
+                    while(p)//2种情况结束：匹配为空or找到匹配
+                    {
+                        if(p->next[i])//找到匹配
+                        {
+                            temp->next[i]->fail=p->next[i];
+                            break;
+                        }
+                        p=p->fail;
+                    }
+                    if(p==NULL)//为空则从头匹配
+                        temp->next[i]->fail=root;
+                }
+                q[head++]=temp->next[i];//入队
+            }
+        }
+    }
+}
+
+void query(node *root,char *str)//扫描
+{
+    node *p=root;//Tire入口
+    int len=strlen(str);
+    for(int i=0; i<len; i++)
+    {
+        int index=str[i]-'A';
+        if(str[i]<'A'||str[i]>'Z')//出现非大写字母
+            index=26;
+        while(p->next[index]==NULL&&p!=root)//跳转失败指针
+            p=p->fail;
+        p=p->next[index];
+        if(p==NULL)
+            p=root;
+        node *temp=p;//p不动，temp计算后缀串
+        while(temp!=root)
+        {
+            if(temp->count>-1)//当有出现病毒时不管之前有没有出现过都要累加
+                visit[temp->count]++;
+            temp=temp->fail;
+        }
+    }
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int n;
+    while(~scanf("%d",&n))
+    {
+        memset(visit,0,sizeof(visit));
+        head=tail=0;
+        node *root=NULL;
+        for(int i=0; i<n; i++)
+        {
+            scanf("%s",a[i]);
+            insert(a[i],root,i);
+        }
+        build_ac_automation(root);
+        scanf("%s",str);
+        query(root,str);
+        for(int i=0; i<n; i++)
+        {
+            if(visit[i])
+                printf("%s: %d\n", a[i], visit[i]);
+        }
+    }
+    return 0;
+}
+
+```

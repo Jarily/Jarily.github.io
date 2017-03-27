@@ -1,0 +1,189 @@
+---
+layout: post
+title: HDU1245(Saving James Bond)最短路径-Floyd
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Saving James Bond](http://acm.hdu.edu.cn/showproblem.php?pid=1245)
+
+### 题意    
+有一个100*100的正方形湖,湖中间有一个直径为15的圆形小岛;  
+有n个点随机分布在这个正方形中;  
+一个人要从小岛上跳出湖外,可以跳跃在这些点上;  
+人每一步能跳的最大距离为d;  
+求能跳出湖外所需的最小的跳跃距离和步数;
+
+### 思想  
+首先计算每个坐标两两间的距离;  
+然后找出所有能从小岛上一步跳到的点存入数组s中;  
+然后找出所有能一步跳出湖外的点存入数组t中;  
+设置两个虚拟的顶点s和t;  
+用s与数组s中的所有顶点相连;  
+用t与数组t中的所有顶点相连;  
+即此题可以转换成求s到t的最短路径;
+
+### 补充  
+在建图的过程中,如果两个顶点之间的距离大于d了;  
+即两个顶点之间无法一步到达，所以此时将权值赋为无穷大;  
+此题很是有点卡精度,下面的代码GUN C++始终过不了,只能用C++过;  
+不知道是sqrt的问题还是double的问题,蛋碎了一地;
+
+### 代码
+  
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 1245
+#	   @date		 2013/04/10
+============================================================================**/
+#include<iostream>
+#include<cstring>
+#include<cmath>
+#include<cstdio>
+#include<cstdlib>
+using namespace std;
+
+const int N=110;
+const double INF=10e8;
+const double eps = 10e-8;
+
+double G[N][N];//建图
+int step[N][N];//计算走的步数
+int s[N];//存放能从小岛上一步跳到的点
+int t[N];//存放能一步跳出湖外的点
+int n;//有效顶点数
+double d;//一步能跳的距离
+
+struct Point
+{
+    int x,y;
+} p[N];
+
+double min(double a,double b)
+{
+    return a<b?a:b;
+}
+
+double dist(int a,int b)
+{
+    return sqrt(double(a*a)+(double)b*b);
+}
+
+void floyd(int n)
+{
+    for(int k=0; k<=n; k++)
+    {
+        for(int i=0; i<=n; i++)
+        {
+            for(int j=0; j<=n; j++)
+            {
+                if(G[i][j]-G[i][k]-G[k][j]>eps)
+                {
+                    G[i][j]=G[i][k]+G[k][j];
+                    step[i][j]=step[i][k]+step[k][j];
+                }
+            }
+        }
+    }
+}
+
+void solve()
+{
+    if(n==1)//没有符合题意的点
+    {
+        if(d-42.50>=eps)//直接一步可以从小岛跳出湖外
+            puts("42.50 1");
+        else
+            puts("can't be saved");
+        return;
+    }
+
+    for(int i=0; i<=n; i++)
+        for(int j=0; j<=n; j++)
+        {
+            G[i][j]=INF;
+            step[i][j]=0;
+        }
+
+    for(int i=1; i<n; i++)
+    {
+        for(int j=1; j<n; j++)
+        {
+            if(i==j)
+            {
+                G[i][j]=0;
+                continue;
+            }
+            G[i][j]=G[j][i]=dist(p[i].x-p[j].x,p[i].y-p[j].y);
+            step[i][j]=step[j][i]=1;
+            if(G[i][j]-eps>d)//两根柱子无法一步跳过去
+            {
+                G[i][j]=G[j][i]=INF;
+                step[i][j]=step[j][i]=0;
+            }
+        }
+    }
+
+    int len1=0;//能从小岛上一步跳到的点的个数
+    int len2=0;//能一步跳出湖外的点的个数
+    for(int i=1; i<n; i++)
+    {
+        if(dist(p[i].x,p[i].y)-7.50-d<=eps)//能从小岛上一步跳到的点
+        {
+            s[len1]=i;
+            len1++;
+        }
+        if((p[i].x*1.0+d-50.00>=eps)||(p[i].x*1.0-d+50.00<=eps)||(p[i].y*1.0-d+50.00<=eps)||(p[i].y*1.0+d-50.00>=eps))//能一步跳出湖外的点
+        {
+            t[len2]=i;
+            len2++;
+        }
+    }
+
+    for(int i=0; i<len1; i++)//初始化虚拟顶点0
+    {
+        G[s[i]][0]=G[0][s[i]]=dist(p[s[i]].x,p[s[i]].y)-7.5;
+        step[s[i]][0]=step[0][s[i]]=1;
+    }
+    for(int i=0; i<len2; i++)//初始化虚拟顶点n
+    {
+    	G[t[i]][n]=G[t[i]][n]=min(fabs(abs(p[t[i]].x)-50.00+eps),fabs(abs(p[t[i]].y)-50.00)+eps); //能一步跳出湖外的点的最小值
+        step[n][t[i]]=step[t[i]][n]=1;
+    }
+
+    floyd(n);
+    if(fabs(G[0][n]-INF)<eps)
+        puts("can't be saved");
+    else
+        printf("%.2lf %d\n",G[0][n],step[0][n]);
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(~scanf("%d%lf",&n,&d))
+    {
+        int j=1;
+        for(int i=1; i<=n; i++)
+        {
+            int x,y;
+            scanf("%d%d",&x,&y);
+            if(abs(x)*1.0-7.5<=eps&&abs(y)*1.0-7.5<=eps)//点在小岛内
+                continue;
+            if(abs(x)*1.0-50>=eps&&abs(y)*1.0-50>=eps)//点在小岛外
+                continue;
+            p[j].x=x;
+            p[j].y=y;
+            j++;
+        }
+        n=j;
+        solve();
+    }
+    return 0;
+}
+
+
+```

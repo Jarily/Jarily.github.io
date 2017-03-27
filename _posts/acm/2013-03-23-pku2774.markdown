@@ -1,0 +1,177 @@
+---
+layout: post
+title:      PKU2774(Long Long Message)求最长公共子串(后缀数组)
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Long Long Message](http://poj.org/problem?id=2774)
+
+### 题意         
+给定两个字符串A和B，求最长公共子串;
+
+### 分析      
+字符串的任何一个子串都是这个字符串的某个后缀的前缀;  
+求A和B的最长公共子串等价于求A的后缀和B的后缀的最长公共前缀的最大值;  
+如果枚举A和B的所有的后缀，很明显效率低下;  
+由于要计算A的后缀和B的后缀的最长公共前缀，所以先将第二个字符串写在第一个字符串后面，  
+中间用一个没有出现过的字符隔开，再求这个新的字符串的后缀数组;
+
+后缀是指从某个位置i开始到整个串末尾结束的一个特殊子串;  
+字符串r的从第i个字符开始的后缀表示为Suffix(i),也就是Suffix(i)=r[i...len(r)];
+
+后缀数组保存的是一个字符串的所有后缀的排序结果;  
+其中SA[i]保存的是字符串所有的后缀中第i小的后缀的开头位置;
+
+定义height[i]=suffix(sa[i-1])和suffix(sa[i])的最长公共前缀，  
+也就是排名相邻的两个后缀的最长公共前缀;
+
+只有当suffix(sa[i-1])和suffix(sa[i])不是同一个字符串中的两个后缀时，  
+height[i]才是满足条件的,即满足条件的height数组的最大值就是这两个字符串的最长公共子串;
+
+### 代码    
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 2774
+#	   @date		 2013/03/23
+============================================================================**/
+
+#include<iostream>
+#include<cstring>
+#include<cstdlib>
+#include<cstdio>
+#include<climits>
+#include<algorithm>
+using namespace std;
+
+const int N=200010;
+const int M=128;//r数组的最大值
+
+#define F(x) ((x)/3+((x)%3==1?0:tb))
+#define G(x) ((x)<tb?(x)*3+1:((x)-tb)*3+2)
+
+int wa[N],wb[N],wv[N],_ws[M];
+
+int c0(int *r,int a,int b)
+{
+    return r[a]==r[b]&&r[a+1]==r[b+1]&&r[a+2]==r[b+2];
+}
+
+int c12(int k,int *r,int a,int b)
+{
+    if(k==2)
+        return r[a]<r[b]||r[a]==r[b]&&c12(1,r,a+1,b+1);
+    else
+        return r[a]<r[b]||r[a]==r[b]&&wv[a+1]<wv[b+1];
+}
+
+void sort(int *r,int *a,int *b,int n,int m)
+{
+    for(int i=0; i<n; i++)
+        wv[i]=r[a[i]];
+    for(int i=0; i<m; i++)
+        _ws[i]=0;
+    for(int i=0; i<n; i++)
+        _ws[wv[i]]++;
+    for(int i=1; i<m; i++)
+        _ws[i]+=_ws[i-1];
+    for(int i=n-1; i>=0; i--)
+        b[--_ws[wv[i]]]=a[i];
+    return;
+}
+
+void dc3(int *r,int *sa,int n,int m)
+{
+    int *rn=r+n,*san=sa+n,ta=0,tb=(n+1)/3,tbc=0,p;
+    r[n]=r[n+1]=0;
+    for(int i=0; i<n; i++)
+    {
+        if(i%3!=0)
+            wa[tbc++]=i;
+    }
+    sort(r+2,wa,wb,tbc,m);
+    sort(r+1,wb,wa,tbc,m);
+    sort(r,wa,wb,tbc,m);
+    p=1,rn[F(wb[0])]=0;
+    for(int i=1; i<tbc; i++)
+    {
+        rn[F(wb[i])]=c0(r,wb[i-1],wb[i])?p-1:p++;
+    }
+    if(p<tbc)
+        dc3(rn,san,tbc,p);
+    else
+        for(int i=0; i<tbc; i++)
+            san[rn[i]]=i;
+    for(int i=0; i<tbc; i++)
+    {
+        if(san[i]<tb)
+            wb[ta++]=san[i]*3;
+    }
+    if(n%3==1)
+        wb[ta++]=n-1;
+    sort(r,wb,wa,ta,m);
+    for(int i=0; i<tbc; i++)
+        wv[wb[i]=G(san[i])]=i;
+    int i,j;
+    for(i=0,j=0,p=0; i<ta && j<tbc; p++)
+    {
+        sa[p]=c12(wb[j]%3,r,wa[i],wb[j])?wa[i++]:wb[j++];
+    }
+    for(; i<ta; p++)
+        sa[p]=wa[i++];
+    for(; j<tbc; p++)
+        sa[p]=wb[j++];
+    return;
+}
+
+int rank[N],height[N];
+
+void calheight(int *r,int *sa,int n)
+{
+    int i,j,k=0;
+    for(int i=1; i<=n; i++)
+        rank[sa[i]]=i;
+    for(int i=0; i<n; height[rank[i++]]=k)
+    {
+        for(k?k--:0,j=sa[rank[i]-1]; r[i+k]==r[j+k]; k++);
+    }
+    return;
+}
+
+char s[N];
+int r[N*3],sa[N*3];
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(~scanf("%s",s))
+    {
+        int j=strlen(s);
+        s[j]=1;
+        scanf("%s",s+j+1);
+        int n=strlen(s);
+        for(int i=0; i<n; i++)
+            r[i]=s[i];
+        r[n]=0;
+        dc3(r,sa,n+1,M);//128:字符串中最大的字符+1
+        calheight(r,sa,n);
+        int ans=0;
+        for(int i=2; i<=n; i++)
+        {
+            if(height[i]>ans)
+            {
+                if((j<sa[i-1] && j>sa[i])|| (j>sa[i-1] && j<sa[i]))
+                    ans=height[i];
+            }
+        }
+        printf("%d\n",ans);
+    }
+    return 0;
+}
+
+
+```

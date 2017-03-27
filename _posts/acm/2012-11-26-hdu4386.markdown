@@ -1,0 +1,61 @@
+---
+layout: post
+title: HDU4386求四条边能组成的最大面积-多校联合九
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接
+[Quadrilateral](http://acm.hdu.edu.cn/showproblem.php?pid=4386)
+
+### 分析
+已知四边形的四条边，求该四边形能得到的最大面积。
+
+已知四条边和两个对角，四边形面积公式为：
+
+    S2=(p-a)*(p-b)*(p-c)*(p-d)-a*b*c*d* cos2A
+
+    其中p=(a+b+c+d)/2，A=两个对角和之半。
+
+从公式可知当A为90°时面积最大。
+
+这时的四边形是圆内接四边形。
+
+### 代码
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 4386
+#	   @date		 2012/11/26
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<cstring>
+#include<algorithm>
+#include<cmath>
+#include<cstdlib>
+using namespace std;
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int T,t=0;
+    scanf("%d",&T);
+    double a,b,c,d,p;
+    while(T--)
+    {
+        scanf("%lf%lf%lf%lf",&a,&b,&c,&d);
+        p=(a+b+c+d)/2;
+        printf("Case %d: ",++t);
+        if(p<=a||p<=b||p<=c||p<=d)
+        {
+            puts("-1");
+            continue;
+        }
+        double ans=sqrt((p-a)*(p-b)*(p-c)*(p-d));
+        printf("%.6lf\n",ans);
+    }
+    return 0;
+}
+```

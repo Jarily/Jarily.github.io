@@ -1,0 +1,54 @@
+<footer class="site-footer">
+
+  <div class="wrapper">
+
+   <!-- <h2 class="footer-heading small-site-title">{{ site.title }}</h2>  -->
+
+    <div class="footer-col-wrapper">
+
+
+      <div class="footer-col footer-col-1 footer-content">
+        <ul class="social-media-list">
+         
+		  {% if site.github_username %}
+          <li>
+            {% include icon-github.html username=site.github_username %}
+          </li>
+          {% endif %}
+
+          {% if site.twitter_username %}
+          <li>
+            {% include icon-twitter.html username=site.twitter_username %}
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+
+
+<!--
+      <div class="footer-col footer-col-3 site-description">
+        <div class="busuanzi-count">
+          <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+          <span class="site-uv"><i class="fa fa-user"></i><span class="busuanzi-value" id="busuanzi_value_site_uv"></span></span>
+          <span class="site-pv"><i class="fa fa-eye"></i><span class="busuanzi-value" id="busuanzi_value_site_pv"></span></span>
+
+		
+		</div>
+      </div>
+	  -->
+
+    </div>
+
+  </div>
+  
+
+<div class="hehe" style=" text-align:center;">
+
+<a href="/index/">{{ site.title }}</a>
+		         <p>
+				 <small>
+            <a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/cn/" target="_blank" title="许可协议">©</a> 2004 - {{site.time | date:"%Y"}} <a href="/about/">{{ site.author }}</a>
+        </small></p>
+   </div>
+
+</footer>

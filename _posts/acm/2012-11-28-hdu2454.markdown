@@ -1,0 +1,112 @@
+---
+layout: post
+title: HDU2454判定简单图
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Degree Sequence of Graph G](http://acm.hdu.edu.cn/showproblem.php?pid=2454)  
+
+### 题意
+给出一个图的每个点的度的序列,求能否构成一个简单图；
+
+### 算法   
+
+#### Havel定理　　  
+给定一个非负整数序列{dn}；　　  
+若存在一个无向图使得图中各点的度与此序列一一对应；　　  
+则称此序列可图化。    
+若图为简单图，则称此序列可简单图化；　　    
+可图化的判定：  
+**d1+d2+……dn=0(mod 2)**  
+关于具体图的构造，我们可以简单地把奇数度的点配对，剩下的全部搞成自环；    
+
+#### 可简单图化的判定（Havel定理）  
+把序列排成不增序，即d1>=d2>=……>=dn；  
+则d可简单图化当且仅当**d'={d2-1，d3-1，……d(d1+1)-1， d(d1+2)，d(d1+3)，……dn}**可简单图化。  
+简单的说，把d排序后，找出度最大的点（设度为d1）；  
+把它与度次大的d1个点之间连边，然后这个点就可以不管了；  
+一直继续这个过程，直到建出完整的图，或出现负度等明显不合理的情况。  
+
+#### 步骤  
+
+1 把度排序，从大到小  
+2 总的度mod 2=0  
+3 最大度<=n-1  
+
+### 代码  
+
+```
+/**============================================================================
+ #	   @author	         Jarily
+ #	   @name		 HDOJ 2454
+ #	   @date		 2012/11/28
+============================================================================**/
+
+#include<iostream>
+#include<cstdio>
+#include<cstdlib>
+#include<algorithm>
+#include<cstring>
+using namespace std;
+
+const int N=1010;
+int a[N];
+
+bool cmp(int x , int y)
+{
+    return x>y;
+}
+
+int main()
+{
+    int t;
+    scanf("%d" , &t);
+    while(t--)
+    {
+        int n ;
+        scanf("%d" , &n);
+        int sum = 0;
+        for(int i = 0 ; i < n ; i++)
+        {
+            scanf("%d" , &a[i]);
+            sum += a[i];
+        }
+        if(sum%2)
+        {
+            printf("no\n");
+            continue;
+        }
+
+        int flag=0;
+        for(int i = 0 ; i < n ; i++)
+        {
+            sort(a , a + n , cmp);
+            if(a[0] == 0)
+            {
+                flag = 1;
+                break;
+            }
+            for(int j = 0 ; j < a[0] ; j++)
+            {
+                a[j+1]--;
+                if(a[j+1] < 0)
+                {
+                    flag = 2;
+                    break;
+                }
+            }
+            a[0] = 0;
+            if(flag == 2)
+                break;
+        }
+        if(flag == 1)
+            printf("yes\n");
+        else
+            printf("no\n");
+    }
+    return 0;
+}
+```

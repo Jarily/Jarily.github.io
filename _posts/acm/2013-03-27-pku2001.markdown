@@ -1,0 +1,136 @@
+---
+layout: post
+title:  PKU2001(Shortest Prefixes)字符串匹配-Trie树
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Shortest Prefixes](http://poj.org/problem?id=2001)
+
+### 题意         
+给出很多字符串,要求找出唯一能识别这个单词的前缀,否则输出该字符串本身;
+
+### 分析      
+建立一个Trie树,设置一个变量num,计算每个字符出现的次数;  
+查找的时候依次从根输出字符串的字符;  
+如果该结点的下一个结点的num为1;  
+则说明下一个字符是第一次出现过的字符;  
+即当前已经输出的为唯一的前缀,直接返回即可;
+
+### 代码    
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 2001
+#	   @date		 2013/03/27
+============================================================================**/
+#include<iostream>
+#include<cstring>
+#include<cstdlib>
+#include<cstdio>
+#include<climits>
+#include<algorithm>
+using namespace std;
+
+const int MAX=26;
+const int N=1010;
+const int M=25;
+struct Trie //Trie结点声明
+{
+    bool isStr;//标记该结点处是否构成一个串
+    int num;//统计字符出现的次数
+    Trie *next[MAX];//一个指针数组，存放着指向各个儿子节点的指针
+};
+
+void insert(Trie *root,const char *s) //将单词s插入到字典树中
+{
+    if(root==NULL||*s=='\0')
+        return;
+    Trie *p=root;
+    while(*s)
+    {
+        if(p->next[*s-'a']==NULL)//如果不存在存储该字符的节点，则建立结点
+        {
+            Trie *temp=new Trie;
+            for(int i=0; i<MAX; i++)
+            {
+                temp->next[i]=NULL;
+            }
+            temp->isStr=false;
+            temp->num=1;
+            p->next[*s-'a']=temp;
+            p=p->next[*s-'a'];
+        }
+        else
+        {
+            p=p->next[*s-'a'];
+            p->num++;
+        }
+        s++;//让指针s指向下一个字符
+    }
+    p->isStr=true;//单词结束的地方标记此处可以构成一个串
+}
+
+void search(Trie *root,const char *s)//查找某个单词s是否已经存在
+{
+    Trie *p=root;
+    while(p&&*s)
+    {
+        if(p->next[*s-'a']->num==1)
+        {
+            printf("%c",*s);
+            return;
+        }
+        else
+            printf("%c",*s);
+        p=p->next[*s-'a'];
+        s++;
+    }
+}
+
+void del(Trie *root)//释放整个字典树占的堆区空间
+{
+    for(int i=0; i<MAX; i++)
+    {
+        if(root->next[i]!=NULL)
+        {
+            del(root->next[i]);
+        }
+    }
+    delete root;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    char s[N][M];
+    Trie *root = new Trie;
+    for(int i=0; i<MAX; i++)
+    {
+        root->next[i]=NULL;
+    }
+    root->isStr=false;
+    root->num=1;
+    int n=0;
+    while(gets(s[n]))
+    {
+        insert(root,s[n]);     //先建立字典树
+        n++;
+    }
+    int t=0;
+    while(t<n)
+    {
+        printf("%s ",s[t]);
+        search(root,s[t]);
+        printf("\n");
+        t++;
+    }
+    del(root); //释放空间很重要
+    return 0;
+}
+
+
+```

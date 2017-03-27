@@ -1,0 +1,178 @@
+---
+layout: post
+title:  次小生成树
+author: "R. Liao" 
+categories: acm
+tags: 次小生成树
+---
+
+### 基本介绍     
+设G=(V,E,w)是连通的无向图,T是图G的一棵最小生成树;  
+如果有另一棵树T1,满足不存在树T’,ω(T’)<ω(T1),则称T1是图G的次小生成树;
+
+### 算法思想    
+**邻集**:由T进行一次可行交换得到的新的生成树所组成的集合,称为树T的邻集,记为N(T);  
+设T是图G的最小生成树,如果T1满足ω(T1)=min{ω(T’)|T’∈N(T)},则T1是G的次小生成树;  
+首先先求该图的最小生成树T,时间复杂度O(Vlog2V+E);  
+然后,求T的邻集中权值和最小的生成树,即图G 的次小生成树;  
+如果只是简单的枚举,复杂度很高;  
+首先枚举两条边的复杂度是O(VE),再判断该交换是否可行的复杂度是O(V),则总的时间复杂度是O(V2E);  
+
+分析可知,每加入一条不在树上的边,总能形成一个环,只有删去环上的一条边,才能保证交换后仍然是生成树;  
+而删去边的权值越大,新得到的生成树的权值和越小,可以以此将复杂度降为O(VE);  
+
+#### 更好的方法
+首先做一步预处理,求出树上每两个结点之间的路径上的权值最大的边;    
+然后枚举图中不在树上的边,有了预处理,就可以用O(1)的时间得到形成的环上的权值最大的边;    
+
+##### 预处理
+因为是一棵树,只要简单的BFS即可,预处理所要的时间复杂度为O(V2);
+
+### 举例应用-HDU4081  
+
+#### 链接  
+[Qin Shi Huang's National Road System(2011 Asia Beijing Regional Contest)](http://acm.hdu.edu.cn/showproblem.php?pid=4081)
+
+#### 题意         
+有n个城市,秦始皇要修用n-1条路把它们连起来,要求从任一点出发,都可以到达其它的任意点,秦始皇希望这所有n-1条路长度之和最短;  
+然后徐福突然有冒出来,说是他有魔法,可以不用人力、财力就变出其中任意一条路出来;  
+秦始皇希望徐福能把要修的n-1条路中最长的那条变出来,但是徐福希望能把要求的人力数量最多的那条变出来;  
+对于每条路所需要的人力,是指这条路连接的两个城市的人数之和;  
+秦始皇给出了一个公式A/B,A是指要徐福用魔法变出的那条路所需人力,  
+B是指除了徐福变出来的那条之外的所有n-2条路径长度之和,选使得A/B值最大的那条;
+
+#### 分析  
+为了使的A/B值最大,首先是需要是B尽量要小,所以可先求出n个城市的最小生成树;  
+然后就是决定要选择哪一条边用徐福的魔法来变;  
+可以枚举每一条边,假设最小生成树的值是Mst,而枚举的那条边长度是G[i][j],  
+如果这一条边已经是属于最小生成树上的,那么最终式子的值是A/(Mst-G[i][j]);  
+如果这一条不属于最小生成树上的,那么添加上这条边,就会有n条边,那么就会使得有了一个环;  
+为了使得它还是一个生成树,就要删掉环上的一条边,为了让生成树的权值尽量小,那么就要删掉除了加入的那条边以外,权值最大的那条路径;  
+假设删除的那个边的权值是path[i][j],那么就是A/(Mst-path[i][j]);  
+
+* 解这题的关键也在于怎样求出次小生成树,具体实现时,更简单的方法是从每个节点i遍历整个最小生成树;  
+定义path[i][j]为从i到j的路径上最大边的权值,遍历图求出path[i][j]的值;  
+然后对于添加每条不在最小生成树中的边(i,j),新的生成树权值之和就是Mst+G[i][j]–path[i][j],其最小值则为次小生成树;
+
+#### 代码  
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 HDOJ 4081
+#	   @date		 2013/05/04
+============================================================================**/
+
+#include<iostream>
+#include<string>
+#include<cstdio>
+#include<map>
+#include<cstring>
+#include<cmath>
+#include<algorithm>
+using namespace std;
+
+const int INF=99999999;
+const int N=1010;
+
+struct point
+{
+    int x,y;
+} p[N];
+
+double G[N][N],dist[N];
+double path[N][N];//从i到j的路径上最大边的权值
+int population[N];//每个城市的人口数
+int pre[N],visit[N];
+bool used[N][N];//边是否在该MST中
+int n;
+
+inline double Dist(point v1,point v2)
+{
+    return sqrt(double(v1.x-v2.x)*(v1.x-v2.x)+double(v1.y-v2.y)*(v1.y-v2.y));
+}
+
+double Prim()
+{
+    double Mst=0;
+    memset(visit, 0, sizeof(visit));
+    memset(used, 0, sizeof(used));
+    memset(path, 0, sizeof(path));
+    visit[1]=1;
+    for(int i=1; i<=n; ++i)
+    {
+        dist[i] = G[1][i];
+        pre[i] = 1;
+    }
+    for(int i=1; i<n; ++i)
+    {
+        int u=-1;
+        for(int j=1; j<=n; ++j)
+        {
+            if(!visit[j])
+            {
+                if(u==-1||dist[j]<dist[u])
+                    u=j;
+            }
+        }
+        used[u][pre[u]]=used[pre[u]][u] = true;//加入MST
+        Mst+=G[pre[u]][u];
+        visit[u]=1;
+        for(int j=1; j<=n; ++j)
+        {
+            if(visit[j]&&j!=u)//求从u到j的路径上最大边的权值
+            {
+                path[u][j]=path[j][u]=max(path[j][pre[u]], dist[u]);
+            }
+            if(!visit[j])
+            {
+                if(dist[j]>G[u][j])//更新相邻顶点的dist
+                {
+                    dist[j]=G[u][j];
+                    pre[j]=u;
+                }
+            }
+        }
+    }
+    return Mst;
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    int tcase;
+    scanf("%d",&tcase);
+    while(tcase--)
+    {
+        scanf("%d",&n);
+        memset(G,0,sizeof(G));
+        for(int i=1; i<=n; ++i)
+            scanf("%d%d%d",&p[i].x,&p[i].y,&population[i]);
+        for(int i=1; i<=n; ++i)
+        {
+            for(int j=1; j<=n; ++j)
+            {
+                if(i!=j)
+                    G[i][j]=Dist(p[i],p[j]);
+            }
+        }
+        double Mst=Prim();
+        double res=-1;
+        for(int i=1; i<=n; ++i)
+        {
+            for(int j=1; j<=n; ++j)
+                if(i!=j)
+                {
+                    if(used[i][j])
+                        res=max(res,(population[i]+population[j])/(Mst-G[i][j]));
+                    else
+                        res=max(res,(population[i]+population[j])/(Mst-path[i][j]));
+                }
+        }
+        printf("%.2f\n",res);
+    }
+    return 0;
+}
+
+
+```

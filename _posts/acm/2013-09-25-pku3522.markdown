@@ -1,0 +1,120 @@
+---
+layout: post
+title:  PKU3522(Slim Span)-求差值最小的生成树
+author: "R. Liao" 
+categories: acm
+tags: ACM
+---
+
+### 链接  
+[Slim Span](http://poj.org/problem?id=3522)
+
+### 题意           
+一个简单图,n个点,m条边;  
+要求一颗生成树,使得其最大边与最小边的差值是所有生成树中最小的,输出最小的那个差值;
+
+### 分析      
+枚举最小边，用kruskal求生成树,不断更新差值得到最优值;
+
+### 代码
+
+```
+/**============================================================================
+#	   @author	         Jarily
+#	   @name		 POJ 3522
+#	   @date		 2013/09/25
+============================================================================**/
+#include<iostream>
+#include<cstdio>
+#include<algorithm>
+#include<cmath>
+#include<cstring>
+#include<climits>
+#include<cstdlib>
+using namespace std;
+
+const int N=111;
+const int M=5555;
+const int INF=0xffffff;
+
+int n,m;
+int p[N];
+
+struct Edge
+{
+    int u,v,w;
+} e[M];
+
+int cmp(const void *a,const void *b)
+{
+    Edge *x=(Edge *)a;
+    Edge *y=(Edge *)b;
+    return x->w-y->w;
+}
+
+
+int find(int x)
+{
+    if(p[x]!=x)
+        p[x]=find(p[x]);
+    return p[x];
+}
+
+int Kruskal(int s)
+{
+    int cnt=0;//记录边数
+    for(int i=1; i<=n; i++)
+        p[i]=i;
+    int t=s;
+    int flag=1;
+    while(t<m)
+    {
+        if(find(e[t].u)==find(e[t].v))
+            flag=0;
+        if(flag)
+        {
+            p[find(e[t].v)]=find(e[t].u);
+            cnt++;
+            if(cnt==n-1)
+                break;
+        }
+        t++;
+        flag=1;
+    }
+    if(cnt<n-1)
+        return -1;
+    return e[t].w-e[s].w;//最大边-最小边
+}
+
+int main()
+{
+    //freopen("C:\\Users\\Administrator\\Desktop\\kd.txt","r",stdin);
+    while(~scanf("%d%d",&n,&m))
+    {
+        if(n==0&&m==0)
+            break;
+        for(int i=0; i<m; i++)
+        {
+            scanf("%d%d%d",&e[i].u,&e[i].v,&e[i].w);
+        }
+
+        qsort(e,m,sizeof(Edge),cmp);
+
+        int ans=INF;
+        for(int i=0; i<=m-n+1; i++)//枚举所有m-n+1颗生成树
+        {
+            int res=Kruskal(i);
+            if(res==-1)
+                break;
+            if(res<ans)
+                ans=res;
+        }
+        if(ans==INF)
+            puts("-1");
+        else
+            printf("%d\n",ans);
+    }
+    return 0;
+}
+
+```
