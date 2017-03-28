@@ -1,0 +1,12 @@
+---
+layout: hehe
+---
+
+
+
+![404](/images/404/404.png)
+
+
+
+
+<strong>  You Can Click [Here](/index.html) to Go Back to Home.</strong>
