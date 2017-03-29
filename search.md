@@ -15,6 +15,5 @@ tagline: "You can search anything in this site."
 
 #### 你也可以尝试下面的方法来进行本地搜索
 
-* 点击右下角图标进行搜索
-* 双击ctrl键进行搜索或关闭
-* 搜索页面点击右上角关闭按钮关闭搜索试图
+* 点击屏幕右下角图标
+* 双击ctrl键

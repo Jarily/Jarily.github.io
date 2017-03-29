@@ -1,0 +1,196 @@
+---
+layout: post
+title: Boosting算法
+author: "R. Liao" 
+categories: study
+tags: boosting
+---
+
+####   基本介绍  
+
+Boosting方法源于PAC（Probably Approximately Correct，概率近似正确）学习模型的理论分析。
+
+首先Kearns和Valiant提出了强可学习和弱可学习的概念。
+
+在PAC学习模型中，若存在一个多项式学习算法来识别一组概念，并且识别正确率很高，那么这组概念是强可学习的：
+
+而如果学习算法识剐一组概念的正确率仅比随机猜测略好，那么这组概念是弱可学习的；
+
+Kearns和Valiant提出了弱学习算法与强学习算法的等价性问题，即是否可以将弱学习算法提升成强学习算法。
+
+如果两者等价，那么在学习概念时，我们只需要找到一个比随机猜想略好的方法就可以将它提升为强学习算法，
+
+也即，能否把在PAC模型中表现稍好于随机猜想的弱学习机算法提升(Boost)成非常准确的强学习机算法。
+
+####   算法流程
+
+1. 从大小为n的原始样本集D中不放回得随机选取n1个样本点，得到样本集D1，根
+据D1训练第一个弱分类器C1。
+
+2. 采用掷硬币方式，如果是正面就选取D中剩余样本点一个一个送到C1中进行分
+类，遇到第一个被错分的样本加入集合D2中；如果是反面就选取一个被C1正确分
+类的样本点加入集合D2中。集合D2有一半样本被C1正确分类，另一半样本被C1错
+误分类，利用D2训练弱分类器C2。
+
+3. 取样本集D中剩余样本点，如C1和C2分类结果不同，就把该样本加入集合D3，
+训练弱分类器C3。
+
+4. 用这3个分类器进行分类，如果C1和C2判决结果相同，则样本标记为这个类别
+。如果C1和C2判决结果不同，则样本标记为C3类别。
+
+
+####   Python代码实现
+
+
+也可以点击[链接](https://github.com/Jarily/Boosting)查看测试数据和源代码
+
+~~~
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Mar 22 14:33:35 2017
+
+@author: Jarily
+"""
+
+import random
+import numpy as np
+from sklearn.tree import DecisionTreeClassifier
+
+
+'''  弱分类器c1 '''
+def weak_classifier_1(X,y):    
+    model = DecisionTreeClassifier()
+    model.fit(X, y)
+    return model
+
+'''  弱分类器c2 '''
+def weak_classifier_2(X,y):    
+    model = DecisionTreeClassifier()
+    model.fit(X, y)
+    return model
+
+'''  弱分类器c3 '''
+def weak_classifier_3(X,y):    
+    model = DecisionTreeClassifier()
+    model.fit(X, y)
+    return model
+   
+'''  boosting所获得的强分类器 '''    
+def strong_classifier(c1,c2,c3,X):
+    y1=c1.predict(X)
+    y2=c2.predict(X)
+    y3=c3.predict(X)
+    
+    if y1==y2:
+        return y1
+    else:
+        return y3
+    
+'''  boosting算法 '''    
+def train():
+    global dataset
+    dataset = np.loadtxt('data.txt', delimiter=",")    
+    #print(dataset.shape)
+
+
+    X1 = dataset[0:n1,0:7]  #前n1行的0到7列
+    y1 = dataset[0:n1,8]    #前n1行的第8列
+    
+    global c1 
+    c1 = weak_classifier_1(X1,y1)  #弱分类器c1  
+
+    for i in range(0,n1):
+        dataset=np.delete(dataset,[0],axis=0)
+   # print(dataset.shape)
+
+    ls=[]  #保存算法应该放入集合D2的点
+    flag=0
+    for i in range(0,dataset.shape[0]-n2):
+        random.seed()              #默认以为系统时间为种子，体现随机性
+        xx=random.randint(0,1)     #抛硬币 1为上 0为下
+        X1 = dataset[i:i+1,0:7]    #所有行的0到7列
+        y1 = dataset[i:i+1,8]      #所有行的第8列
+        test_y = c1.predict(X1)    #将当前点放入弱分类器c1种测试
+        if xx==1:
+            if y1==test_y:         #测试正确
+                pass
+            else:
+                if(flag==1):  #将X1,y1加入X2,y2
+                    X2=np.vstack((X2,X1)) 
+                    y2=np.vstack((y2,y1))
+                else:
+                    X2=X1
+                    y2=y1
+                    flag=1
+                ls.append(i)
+        else:
+            if y1==test_y:
+                if(flag==1):
+                    X2=np.vstack((X2,X1))
+                    y2=np.vstack((y2,y1))
+                else:
+                    X2=X1
+                    y2=y1
+                    flag=1
+                ls.append(i)
+            else:
+                pass
+            
+    global c2
+    c2 = weak_classifier_2(X2,y2)  #弱分类器c2  
+
+    
+    flag=0
+    for i in range(0,dataset.shape[0]-n2):
+        if i not in ls:                       #没有放入集合D2的剩下的点 
+            X1 = dataset[i:i+1,0:7]  #第i行的0到7列
+            y1 = dataset[i:i+1,8]    #第i行的第8列
+            test_y1 = c1.predict(X1)
+            test_y2 = c2.predict(X1)
+            if test_y1 == test_y2:
+                pass
+            else:
+                #print(test_y1)
+                #print(test_y2)
+                #print("----------")
+                if(flag==1):
+                    X3=np.vstack((X3,X1))
+                    y3=np.vstack((y3,y1))
+                else:
+                    X3=X1
+                    y3=y1
+                    flag=1
+    
+    global c3 
+    c3 = weak_classifier_3(X3,y3)  #弱分类器c3  
+    
+
+def main():
+    
+    global n1,n2
+    n1=300   # n1为集合D1的点的数量
+    n2=50   # n2为测试的点的数量
+    
+    train()  # boosting算法
+    
+    cnt=0    #正确的测试
+    sum=0    #测试点的总数
+    for i in range(dataset.shape[0]-n2,dataset.shape[0]):
+        X1 = dataset[i:i+1,0:7]  #第i行的0到7列
+        y1 = dataset[i:i+1,8]    #第i行的第8列
+        sum+=1
+        test_y=strong_classifier(c1,c2,c3,X1)
+        if y1== test_y:  #测试正确
+            #print("1")
+            cnt+=1
+        else:
+            pass
+            #print("0")
+    print("测试样本总数：%d"%sum)
+    print("测试正确样本数：%d"%cnt)
+    print("正确率为：%.2lf"%(1.0*cnt/sum))
+
+if __name__=='__main__':
+    main()
+~~~
+
