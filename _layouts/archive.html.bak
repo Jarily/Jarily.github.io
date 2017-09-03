@@ -10,13 +10,13 @@ layout: page
 {% if cat == page.category %}
 
 
-
+      <li>
         <span class="post-meta-main">{{ post.date | date: "%b %-d, %Y" }}</span>
-
+</li>      <li>
         <h4>
           <a class="post-link-main" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
         </h4>
-
+      </li>
 <!--
 <div class="post postContent">
   <div  class="postDate"><time datetime="{{ post.date | date_to_xmlschema }}" itemprop="datePublished">{{ post.date | date: "%b %-d, %Y" }}</time>
